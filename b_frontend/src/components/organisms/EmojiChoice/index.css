@@ -1,0 +1,17 @@
+.emoji-choice-item {
+    display: inline-block;
+}
+
+button.emoji {
+    font-size: 2em;
+    border: none;
+    background: none;
+    cursor: pointer;
+    outline: inherit;
+    filter: grayscale(100%);
+    margin: 0;
+}
+
+button.emoji.selected-emoji {
+    filter: grayscale(0%);
+}

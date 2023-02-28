@@ -1,0 +1,15 @@
+.app {
+    display: flex;
+    background-color: rgb(243, 244, 244);
+    color: #203e51;
+}
+
+.app .side-margin {
+    flex: 1;
+}
+
+.app .main-content {
+    flex: 3;
+    font-size: 2em;
+    min-height: 100vh;
+}

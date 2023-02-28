@@ -1,0 +1,8 @@
+.survey-frame {
+    display: flex;
+    margin: 75px 150px;
+}
+
+.survey-frame > div {
+    flex: 1;
+}

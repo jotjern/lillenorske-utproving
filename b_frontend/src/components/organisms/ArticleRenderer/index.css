@@ -1,0 +1,5 @@
+.article.highlightable p span:hover {
+    background-color: lightblue;
+    outline: 1px solid blue;
+    cursor: pointer;
+}
