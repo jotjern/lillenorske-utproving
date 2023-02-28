@@ -334,6 +334,10 @@ app.post("/api/login", async (req, res) => {
         return;
     }
     const session = await createSession(code);
+    if (session === null) {
+        res.status(401).send("Invalid code");
+        return;
+    }
     res.cookie("session", session, {httpOnly: true});
     res.status(200).send("OK");
 });

@@ -8,6 +8,16 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ThanksPage from "../../templates/ThanksPage";
 import LoadingPage from "../../templates/LoadingPage";
 
+interface ImportMetaEnv {
+    VITE_API_URL: string;
+}
+
+const API_URL = import.meta.env.VITE_API_URL;
+console.log(API_URL);
+// to set the API_URL, run `npm run dev -- --define:VITE_API_URL="http://localhost:5000"`
+
+console.log(API_URL);
+
 interface Form {
     pre_knowledge: PreKnowledge | null;
     article_notes: Note[] | null;
@@ -33,7 +43,7 @@ function App() {
 
     const url_code = window.location.hash.substring(1).trim();
     if (url_code) {
-        fetch("http://localhost:15151/api/login", {
+        fetch(API_URL + "/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -59,7 +69,7 @@ function App() {
         if (article) return;
 
         let has_form = form.pre_knowledge && form.survey && form.article_notes;
-        fetch("http://localhost:15151/api/state", {
+        fetch(API_URL + "/state", {
             credentials: "include",
             body: has_form ? JSON.stringify(form) : undefined,
             headers: form ? {
@@ -119,7 +129,7 @@ function App() {
         } else if (state.page === "suggest") {
             console.log(state);
             return <SuggestionPage pagesToRank={state.pagesToRank as unknown as PageToRank[]} onFinished={(suggestions, rankings) => {
-                fetch("http://localhost:15151/api/suggest", {
+                fetch(API_URL + "/suggest", {
                     method: "POST",
                     credentials: "include",
                     body: JSON.stringify({suggestions, rankings}),
@@ -136,6 +146,8 @@ function App() {
             return <LoadingPage/>
         }
     }
+
+    return <div>...</div>
 }
 
 export default App;
