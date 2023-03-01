@@ -41,7 +41,7 @@ function App() {
         page: "read" | "suggest" | "thankyou" | "unauthorized", pagesToRank?: PageToRank
     }>({page: "read"});
 
-    const url_code = window.location.hash.substring(1).trim();
+    const url_code = window.location.search.substring(1).trim();
     if (url_code) {
         fetch(API_URL + "/login", {
             method: "POST",
@@ -59,6 +59,8 @@ function App() {
                 window.history.pushState(null, "", "/");
             }
         });
+
+        return <h1>Logging in...</h1>
     }
 
     useEffect(() => {
@@ -85,6 +87,7 @@ function App() {
                     return response.json()
                 }
             }).then(response => {
+                if (!response) return;
                 window.history.pushState(null, "", "/");
                 if (response["state"] === "read") {
                     setArticle(response["article"]);

@@ -383,6 +383,10 @@ app.post("/api/login", (req, res) => __awaiter(void 0, void 0, void 0, function*
         return;
     }
     const session = yield createSession(code);
+    if (session === null) {
+        res.status(401).send("Invalid code");
+        return;
+    }
     res.cookie("session", session, { httpOnly: true });
     res.status(200).send("OK");
 }));
