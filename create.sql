@@ -42,7 +42,7 @@ CREATE TABLE reviews (
 	surveyDifficulty text,
 	surveySuitableAge text,
 	surveyLearnedSomething text,
-	skipped bool
+	skipped bool DEFAULT false
 );
 
 CREATE TABLE reviewNotes (
