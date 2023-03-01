@@ -6,7 +6,6 @@ DROP TABLE reviewNotes;
 DROP TABLE loginKeyOnArticle;
 DROP TABLE suggestionsAndRankings;
 
-
 CREATE TABLE articles (
 	articleId SERIAL PRIMARY KEY,
 	title text,
