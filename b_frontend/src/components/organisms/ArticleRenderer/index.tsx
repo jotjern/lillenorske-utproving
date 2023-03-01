@@ -67,6 +67,10 @@ export default (props: ArticleRendererProps) => {
             });
         });
 
+        article.querySelectorAll("a").forEach(elem => {
+            elem.replaceWith(...Array.from(elem.childNodes));
+        });
+
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
             if (props.wordColors && props.wordColors.has(i)) {
