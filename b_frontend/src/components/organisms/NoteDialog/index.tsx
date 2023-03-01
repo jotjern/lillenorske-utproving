@@ -5,12 +5,13 @@ export type Note = {
     reason: "understanding" | "unnecessary" | "good";
     index: number;
     text: string;
-    type: "word" | "paragraph";
+    type: "word" | "element";
 }
 
 interface NoteDialogProps {
-    word: {
-        word: string;
+    element: {
+        type: "word" | "element";
+        text: string;
         index: number;
     } | null,
     onSubmitNote: (note: Note) => void;
@@ -18,15 +19,15 @@ interface NoteDialogProps {
 }
 
 export default (props: NoteDialogProps) => {
-    if (props.word === null) return null;
+    if (props.element === null) return null;
 
     function submitNote(reason: "understanding" | "unnecessary" | "good") {
-        if (props.word === null || props.onSubmitNote === undefined) return;
+        if (props.element === null || props.onSubmitNote === undefined) return;
         props.onSubmitNote({
             reason,
-            index: props.word.index,
-            text: props.word.word,
-            type: "word"
+            index: props.element.index,
+            text: props.element.text,
+            type: props.element.type,
         })
     }
 
@@ -37,9 +38,9 @@ export default (props: NoteDialogProps) => {
         <div className="note-dialog">
             <button className="note-dialog-close" onClick={props.onCloseDialog}>X</button>
             <br/>
-            <p className="highlighted-segment">{props.word.word}</p>
+            <p className="highlighted-segment">{props.element.text}</p>
             <div className="note-dialog-buttons">
-                <FakeLink onClick={() => submitNote("understanding")}>Jeg forsto ikke ordet</FakeLink>
+                <FakeLink onClick={() => submitNote("understanding")}>Jeg forsto ikke {props.element.type === "word" ? "ordet" : "avsnittet"}</FakeLink>
                 <br/>
                 <FakeLink onClick={() => submitNote("unnecessary")}>Det var unødvendig</FakeLink>
                 <br/>

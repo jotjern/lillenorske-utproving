@@ -3,7 +3,7 @@ import "./index.css";
 
 interface ArticleRendererProps {
     html: string;
-    onClickWord?: ({word, index}: {word: string, index: number}) => void;
+    onElementClicked?: ({type, index}: {type: "word" | "element", index: number, text: string}) => void;
     wordColors?: Map<number, string>;
 }
 
@@ -61,6 +61,10 @@ export default (props: ArticleRendererProps) => {
         article.querySelectorAll("p, h2").forEach(elem => {
             words = words.concat(separate_words(elem))
             segments.push(elem);
+            elem.addEventListener("click", () => {
+                if (props.onElementClicked)
+                    props.onElementClicked({text: elem.textContent || "", type: "element", index: segments.indexOf(elem)});
+            });
         });
 
         for (let i = 0; i < words.length; i++) {
@@ -69,15 +73,15 @@ export default (props: ArticleRendererProps) => {
                 word.style.backgroundColor = props.wordColors.get(i) || "";
             }
             word.addEventListener("click", () => {
-                if (props.onClickWord)
-                    props.onClickWord({word: word.textContent || "", index: words.indexOf(word)});
+                if (props.onElementClicked)
+                    props.onElementClicked({text: word.textContent || "", type: "word", index: words.indexOf(word)});
             });
         }
     }, []);
 
     return (
         <div
-            className={"article" + (props.onClickWord ? " highlightable" : "")}
+            className={"article" + (props.onElementClicked ? " highlightable" : "")}
             id={id}/>
     );
 }

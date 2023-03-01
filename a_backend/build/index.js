@@ -41,14 +41,16 @@ const cors_1 = __importDefault(require("cors"));
 const pg_1 = __importDefault(require("pg"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const crypto = __importStar(require("crypto"));
+const fs = __importStar(require("fs"));
 const port = process.env.PORT || 15151;
 const app = (0, express_1.default)();
+const db = JSON.parse(fs.readFileSync(__dirname + "/../db.json", "utf8"));
 const pool = new pg_1.default.Pool({
-    port: 7890,
-    host: "localhost",
-    user: "postgres",
-    password: "pgadmin",
-    database: "utproving"
+    port: db.port,
+    host: db.host,
+    user: db.user,
+    password: db.password,
+    database: db.database,
 });
 /*
 pool.connect().then(async () => {
@@ -192,7 +194,7 @@ function isValidForm(form) {
             return false;
         if (typeof note.type !== "string")
             return false;
-        if (["word", "paragraph"].indexOf(note.type) === -1)
+        if (["word", "element"].indexOf(note.type) === -1)
             return false;
     }
     return true;

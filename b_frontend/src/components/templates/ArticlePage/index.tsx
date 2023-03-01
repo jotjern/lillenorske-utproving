@@ -12,7 +12,7 @@ interface ArticlePageProps {
 }
 
 export default (props: ArticlePageProps) => {
-    const [clickedWord, setClickedWord] = useState<{index: number, word: string} | null>(null);
+    const [clickedElement, setClickedElement] = useState<{type: "word" | "element", index: number, text: string} | null>(null);
     const [notes, setNotes] = useState<Note[]>([]);
 
     return <>
@@ -21,9 +21,7 @@ export default (props: ArticlePageProps) => {
             <div className="main-content">
                 <ArticleRenderer
                     html={props.article.html}
-                    onClickWord={word  => {
-                        setClickedWord(word);
-                    }}
+                    onElementClicked={setClickedElement}
                 />
                 <button className="fake-link" onClick={() => {
                     if (props.onFinished) props.onFinished(notes);
@@ -32,12 +30,12 @@ export default (props: ArticlePageProps) => {
             <div className="side-margin"/>
         </div>
         <NoteDialog
-            word={clickedWord}
+            element={clickedElement}
             onSubmitNote={note => {
                 setNotes([...notes, note]);
-                setClickedWord(null);
+                setClickedElement(null);
             }}
-            onCloseDialog={() => setClickedWord(null)}
+            onCloseDialog={() => setClickedElement(null)}
         />
     </>
 }

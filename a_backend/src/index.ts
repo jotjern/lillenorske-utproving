@@ -155,7 +155,7 @@ function isValidForm(form: any) {
         if (typeof note.text !== "string") return false;
         if (note.text.length > 1000 || note.text.length < 1) return false;
         if (typeof note.type !== "string") return false;
-        if (["word", "paragraph"].indexOf(note.type) === -1) return false;
+        if (["word", "element"].indexOf(note.type) === -1) return false;
     }
     return true;
 }
