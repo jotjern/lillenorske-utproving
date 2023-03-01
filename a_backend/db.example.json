@@ -1,0 +1,7 @@
+{
+  "port": 7890,
+  "host": "0.0.0.0",
+  "user": "postgres",
+  "password": "pgadmin",
+  "database": "utproving"
+}

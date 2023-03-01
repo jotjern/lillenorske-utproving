@@ -4,16 +4,18 @@ import cors from "cors";
 import pg, {PoolClient} from "pg";
 import cookieParser from "cookie-parser";
 import * as crypto from "crypto";
+import * as fs from "fs";
 
 const port = process.env.PORT || 15151;
 const app = express();
 
+const db = JSON.parse(fs.readFileSync(__dirname + "/../db.json", "utf8"));
 const pool = new pg.Pool({
-    port: 7890,
-    host: "localhost",
-    user: "postgres",
-    password: "pgadmin",
-    database: "utproving"
+    port: db.port,
+    host: db.host,
+    user: db.user,
+    password: db.password,
+    database: db.database,
 });
 
 /*
