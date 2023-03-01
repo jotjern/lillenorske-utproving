@@ -6,6 +6,7 @@ DROP TABLE reviewNotes;
 DROP TABLE loginKeyOnArticle;
 DROP TABLE suggestionsAndRankings;
 
+
 CREATE TABLE articles (
 	articleId SERIAL PRIMARY KEY,
 	title text,
@@ -22,8 +23,8 @@ CREATE TABLE sessions (
 	sessionId VARCHAR(64) PRIMARY KEY,
 	loginKeyId VARCHAR(16),
 	CONSTRAINT fk_loginKeyId,
-	FOREIGN KEY(loginKeyId),
-	REFERENCES loginKeys(loginKeyId),
+	FOREIGN KEY(loginKeyId)
+	REFERENCES loginKeys(loginKeyId)
 	ON DELETE SET NULL
 );
 
@@ -33,7 +34,7 @@ CREATE TABLE reviews (
 	CONSTRAINT fk_articleId
 	FOREIGN KEY(articleId)
 	REFERENCES articles(articleId),
-	sessionId VARCHAR(64)
+	sessionId VARCHAR(64),
 	CONSTRAINT fk_sessionId
 	FOREIGN KEY(sessionId)
 	REFERENCES sessions(sessionId),
@@ -42,7 +43,7 @@ CREATE TABLE reviews (
 	surveyDifficulty text,
 	surveySuitableAge text,
 	surveyLearnedSomething text,
-	skipped bool DEFAULT false
+	skipped bool
 );
 
 CREATE TABLE reviewNotes (
@@ -66,7 +67,7 @@ CREATE TABLE loginKeyOnArticle (
 	CONSTRAINT fk_articleId
 	FOREIGN KEY(articleId)
 	REFERENCES articles(articleId),
-	articleNumber int
+	articleNumber int,
 	CONSTRAINT PK_loginKeyOnArticle PRIMARY KEY (loginKeyId, articleId)
 );
 
@@ -101,4 +102,9 @@ INSERT INTO articles (title, html) VALUES
 ('nebbdyr', '<p><strong>nebbdyr</strong></p><p>er et pattedyr i nebbdyrfamilien og en av de største <a href="https://snl.no/kloakkdyr">kloakkdyrene</a> i verden. Den har sin naturlige utbredelse i Australia. </p><p>Som voksen er den ca. 40 cm lang og veier rundt én kilo. </p><p>Arten er knyttet til elver og bekker og er en nattaktiv jeger som lever av <a href="https://snl.no/virvell%C3%B8se_dyr">virvelløse dyr</a> (invertebrater) den fanger på bakken. </p><p>Den <a href="https://snl.no/formering_-_biologi">formerer</a> seg én gang i året og får som oftest to unger i hvert kull. <a href="https://snl.no/drektighet">Drektighetstiden</a> varer i ca. 15 dager. Ungene blir diet av mora i om lag fire måneder etter fødselen og blir <a href="https://snl.no/kjønnsmodenhet">kjønnsmodne</a> i løpet av to til tre år. </p><p>Levetiden er vanligvis rundt 17 år, men enkelte <a href="https://snl.no/individ_-_biologi">individer</a> kan bli opptil 23 år gamle. </p>'),
 ('bjørn', '<p><strong>bjørn</strong></p><p>er et stort <a href="https://snl.no/rovpattedyr">rovpattedyr</a> i <a href="https://snl.no/ bj%C3%B8rner">Bjørnefamilien</a> som har sin naturlige utbredelse i Asia, Europa, Nord-Amerika, Midtøsten og Russland. </p><p>Som voksen er den ca. 2,3 meter lang og veier rundt 180 kilo. </p><p>Arten er knyttet til ulike <a href="https://snl.no/habitat">habitater</a>, blant annet <a href="https://snl.no/boreal">boreal</a>, <a href="https://snl.no/subarktisk">subarktisk</a> og <a href="https://snl.no/tempererte_soner">temperert</a> skog, subarktisk, <a href="https://snl.no/boreal">boreal</a> og <a href="https://snl.no/tempererte_soner">temperert</a> buskmark, tørr og fuktig <a href="https://snl.no/tropisk">tropisk</a> buskmark,  <a href="https://snl.no/tundra">tundra</a>, og <a href="https://snl.no/subarktisk">subarktisk</a> og <a href="https://snl.no/tempererte_soner">temperert</a> gressmark. Den er en planteeter som lever av plantedeler og frukt den finner på bakken. </p><p>Den <a href="https://snl.no/formering_-_biologi">formerer</a> seg hvert andre til tredje år og får som oftest to unger i hvert kull. <a href="https://snl.no/drektighet">Drektighetstiden</a> varer i ca. 103 dager. Ungene blir diet av mora i om lag sju måneder etter fødselen og blir <a href="https://snl.no/kjønnsmodenhet">kjønnsmodne</a> i løpet av fire til fem år. </p><p>Den lever vanligvis til den er rundt 44 år gammel. </p>'),
 ('pungdjevel', '<p><strong>pungdjevel</strong></p><p>er et pattedyr i <a href="https://snl.no/ rovpungdyr">Rovpungdyrfamilien</a> og en av de minste <a href="https://snl.no/rovpungdyr">rovpungdyrene</a> i verden. Den har sin naturlige utbredelse i Australia. </p><p>Som voksen er den ca. 70 cm lang, hannen veier rundt ni kilo og hunnen rundt sju kilo. </p><p>Arten søker etter mat på natta og lever av <a href="https://snl.no/%C3%A5tsel">åtsler</a> den finner på bakken. </p><p>Den <a href="https://snl.no/formering_-_biologi">formerer</a> seg én gang i året og får rundt tre unger i hvert kull. <a href="https://snl.no/drektighet">Drektighetstiden</a> varer i ca. 26 dager. Ungene blir diet av mora i om lag åtte måneder etter fødselen og blir <a href="https://snl.no/kjønnsmodenhet">kjønnsmodne</a> i løpet av to til tre år. </p><p>Levetiden er vanligvis rundt 8 år, men enkelte <a href="https://snl.no/individ_-_biologi">individer</a> kan bli opptil 13 år gamle. </p>');
+
+INSERT INTO loginKeyOnArticle (loginKeyId, articleId, articleNumber) VALUES
+	('ABCDEFGHIJKLMNOP', (SELECT articleId FROM ARTICLES LIMIT 1 OFFSET 1) , 1),
+	('ABCDEFGHIJKLMNOP', (SELECT articleId FROM ARTICLES LIMIT 1 OFFSET 2), 2),
+	('ABCDEFGHIJKLMNOP', (SELECT articleId FROM ARTICLES LIMIT 1 OFFSET 3), 3)
 
