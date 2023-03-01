@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "set VITE_API_URL=http://localhost:15151/api && vite",
-    "build": "set VITE_API_URL=/api && tsc && vite build",
+    "dev": "export VITE_API_URL=http://localhost:15151/api && vite",
+    "build": "export VITE_API_URL=/api && tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
