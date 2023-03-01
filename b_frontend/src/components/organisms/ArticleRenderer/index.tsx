@@ -61,7 +61,8 @@ export default (props: ArticleRendererProps) => {
         article.querySelectorAll("p, h2").forEach(elem => {
             words = words.concat(separate_words(elem))
             segments.push(elem);
-            elem.addEventListener("click", () => {
+            elem.addEventListener("click", e => {
+                if (e.target !== elem) return;
                 if (props.onElementClicked)
                     props.onElementClicked({text: elem.textContent || "", type: "element", index: segments.indexOf(elem)});
             });
