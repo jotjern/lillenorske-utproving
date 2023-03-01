@@ -7,6 +7,10 @@ interface ArticleRendererProps {
     wordColors?: Map<number, string>;
 }
 
+function is_word(word: string) {
+    return !".,!-".includes(word.trim());
+}
+
 function separate_words(element: Element): HTMLSpanElement[] {
     /*
     Takes all text nodes in an element and separates them into spans of individual words.
@@ -27,6 +31,7 @@ function separate_words(element: Element): HTMLSpanElement[] {
             let nodes = [];
             for (let i = 0; i < node_words.length; i++) {
                 const span = document.createElement("span");
+                span.classList.add("word");
                 let word = node_words[i];
                 let outside_word = i < node_words.length - 1 ? " " : "";
                 if (word.endsWith(".") || word.endsWith(",") || word.endsWith("!") || word.endsWith("?")) {
@@ -37,8 +42,11 @@ function separate_words(element: Element): HTMLSpanElement[] {
                 nodes.push(span);
                 words.push(span);
 
-                if (outside_word)
-                    nodes.push(document.createTextNode(outside_word));
+                if (outside_word) {
+                    const span = document.createElement("span");
+                    span.innerText = outside_word;
+                    nodes.push(span);
+                }
             }
 
             node.replaceWith(...nodes);
@@ -58,7 +66,7 @@ export default (props: ArticleRendererProps) => {
 
         let words: HTMLSpanElement[] = [];
         let segments: Element[] = [];
-        article.querySelectorAll("p, h2").forEach(elem => {
+        article.querySelectorAll("*:not(div)").forEach(elem => {
             words = words.concat(separate_words(elem))
             segments.push(elem);
             elem.addEventListener("click", e => {
@@ -74,9 +82,8 @@ export default (props: ArticleRendererProps) => {
 
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
-            if (props.wordColors && props.wordColors.has(i)) {
+            if (props.wordColors && props.wordColors.has(i))
                 word.style.backgroundColor = props.wordColors.get(i) || "";
-            }
             word.addEventListener("click", () => {
                 if (props.onElementClicked)
                     props.onElementClicked({text: word.textContent || "", type: "word", index: words.indexOf(word)});

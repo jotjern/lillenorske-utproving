@@ -1,10 +1,10 @@
-.article.highlightable p span:hover {
+.article.highlightable * span.word:hover {
     background-color: lightblue;
     outline: 1px solid blue;
     cursor: pointer;
 }
 
-.article.highlightable p:hover:not(:has(span:hover)) {
+.article.highlightable *:not(div):hover:not(:has(span:hover)) {
     background-color: lightblue;
     outline: 1px solid blue;
     cursor: pointer;

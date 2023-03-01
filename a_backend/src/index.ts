@@ -76,7 +76,8 @@ INSERT INTO sessions (id, loginKeyId) VALUES ($1, $2);
 async function getState(sessionId: string) {
     try {
         const articles = await pool.query(`
-            SELECT articles.articleId as id, articles.title AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
+            SELECT
+                articles.articleId as id, regexp_replace(articles.title, '\\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
             FROM loginKeyOnArticle
                      INNER JOIN articles ON loginKeyOnArticle.articleId = articles.articleId
             WHERE loginKeyId IN (SELECT loginKeyId
@@ -227,7 +228,7 @@ async function skipReviews(sessionId: string, client?: PoolClient) {
 
 async function getReviewedArticles(sessionId: string) {
     const result = await pool.query(`
-        SELECT articles.title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
+        SELECT regexp_replace(title, '\\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
         INNER JOIN articles ON articles.articleId = loginKeyOnArticle.articleId
         WHERE loginKeyId = (
         	SELECT loginKeyId FROM sessions WHERE sessionId = $1

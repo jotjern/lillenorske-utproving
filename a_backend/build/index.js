@@ -108,7 +108,8 @@ function getState(sessionId) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const articles = yield pool.query(`
-            SELECT articles.articleId as id, articles.title AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
+            SELECT
+                articles.articleId as id, regexp_replace(articles.title, '\\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
             FROM loginKeyOnArticle
                      INNER JOIN articles ON loginKeyOnArticle.articleId = articles.articleId
             WHERE loginKeyId IN (SELECT loginKeyId
@@ -273,7 +274,7 @@ function skipReviews(sessionId, client) {
 function getReviewedArticles(sessionId) {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield pool.query(`
-        SELECT articles.title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
+        SELECT regexp_replace(title, '\\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
         INNER JOIN articles ON articles.articleId = loginKeyOnArticle.articleId
         WHERE loginKeyId = (
         	SELECT loginKeyId FROM sessions WHERE sessionId = $1
