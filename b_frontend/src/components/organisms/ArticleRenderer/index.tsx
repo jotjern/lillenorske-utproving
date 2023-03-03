@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import "./index.css";
 
 interface ArticleRendererProps {
-    html: string;
+    article: {html: string, title: string};
     onElementClicked?: ({type, index}: {type: "word" | "element", index: number, text: string}) => void;
     wordColors?: Map<number, string>;
 }
@@ -17,7 +17,6 @@ function separate_words(element: Element): HTMLSpanElement[] {
      */
 
     let words: HTMLSpanElement[] = [];
-    console.log("ELEMENT", element);
     let nodes = Array.from(element.childNodes);
     while (nodes.length) {
         const node = nodes.shift();
@@ -25,7 +24,7 @@ function separate_words(element: Element): HTMLSpanElement[] {
         if (node.nodeType === Node.ELEMENT_NODE) {
             nodes = [...nodes, ...Array.from(node.childNodes)];
         }
-        console.log("NODE", node);
+        if (node.parentElement !== null && node.parentElement.classList.contains("word")) continue;
         if (node.nodeType === Node.TEXT_NODE && node.textContent !== null) {
             const node_words = node.textContent.split(" ");
             let nodes = [];
@@ -62,19 +61,7 @@ export default (props: ArticleRendererProps) => {
     useEffect(() => {
         const article = document.getElementById(id);
         if (article === null) return;
-        article.innerHTML = props.html;
-
-        let words: HTMLSpanElement[] = [];
-        let segments: Element[] = [];
-        article.querySelectorAll("*:not(div)").forEach(elem => {
-            words = words.concat(separate_words(elem))
-            segments.push(elem);
-            elem.addEventListener("click", e => {
-                if (e.target !== elem) return;
-                if (props.onElementClicked)
-                    props.onElementClicked({text: elem.textContent || "", type: "element", index: segments.indexOf(elem)});
-            });
-        });
+        article.innerHTML = props.article.html;
 
         article.querySelectorAll("a").forEach(elem => {
             elem.replaceWith(...Array.from(elem.childNodes));
@@ -84,12 +71,29 @@ export default (props: ArticleRendererProps) => {
             if (elem.innerText.trim().match(/^Les mer i (Lille|Store) norske leksikon$/i)) {
                 elem.nextElementSibling?.remove();
                 elem.remove();
-                /*
-                conso
-                elem.nextSibling?.remove();
-                elem.remove();
-                 */
             }
+        });
+
+        const first_paragraph = article.querySelector("p");
+        console.log(first_paragraph);
+        if (first_paragraph !== null) {
+            if (first_paragraph.innerText.startsWith("var ") || first_paragraph.innerText.startsWith("er")) {
+                const capitalized_title = props.article.title.charAt(0).toUpperCase() + props.article.title.slice(1);
+                first_paragraph.insertBefore(document.createTextNode(capitalized_title + " "), first_paragraph.firstChild);
+            }
+        }
+
+        let words: HTMLSpanElement[] = [];
+        let segments: Element[] = [];
+
+        article.querySelectorAll("*:not(div)").forEach(elem => {
+            words = words.concat(separate_words(elem))
+            segments.push(elem);
+            elem.addEventListener("click", e => {
+                if (e.target !== elem) return;
+                if (props.onElementClicked)
+                    props.onElementClicked({text: elem.textContent || "", type: "element", index: segments.indexOf(elem)});
+            });
         });
 
         for (let i = 0; i < words.length; i++) {

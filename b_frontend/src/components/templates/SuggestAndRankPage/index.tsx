@@ -62,11 +62,6 @@ export default (props: SuggestionsPageProps) => {
             rows={7}
             value={suggestions}
             placeholder="Skriv inn her..."/>
-        <p>
-            Nå vil vi at du og resten av klassen forteller en lærer hva dere synes om
-            det dere har lest. Tusen takk for hjelpen!
-        </p>
-
         <button
             onClick={() => {
             if (props.onFinished)

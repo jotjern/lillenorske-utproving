@@ -18,66 +18,11 @@ const pool = new pg.Pool({
     database: db.database,
 });
 
-/*
-pool.connect().then(async () => {
-    const html_articles = fs.readFileSync(__dirname + "/../pattedyr_artikler.html", "utf8").split("\n\n");
-    let n = 0;
-    for (const article of html_articles) {
-        if (!article || article.length < 10) continue;
-        const title = article.split("<strong>")[1].split("</strong>")[0];
-        console.log(title);
-        if (++n > 5) break;
-        await pool.query("INSERT INTO articles (title, html) VALUES ($1, $2)", [title, article]);
-    }
-});
- */
-
-/*
-Database schema:
-
-articles:
-    id: int
-    title: text
-    html: text
-reviews:
-    id: int
-    rating: int
-    articleId: text
-    sessionId: text
-sessions:
-    id: text
-    loginKeyId: int
-loginKeys:
-    id: text
-    schoolName: text
-    grade: int
-    article1: int
-    article2: int
-    article3: int
- */
-
-/*
-Query to get current article:
-
-SELECT id, title, html FROM articles
-WHERE id IN (
-    SELECT article_1, article_2, article_3
-    FROM login_keys
-    WHERE id = (SELECT loginKeyId FROM sessions WHERE id = $1);
-) AND id NOT IN (
-    SELECT articleId FROM reviews WHERE sessionId = $1
-);
-
-Query to generate a new session:
-
-INSERT INTO sessions (id, loginKeyId) VALUES ($1, $2);
-*/
-
 async function getState(sessionId: string) {
     try {
         const articles = await pool.query(`
             SELECT
-                articles.articleId as id, regexp_replace(articles.title, '\\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
+                articles.articleId as id, regexp_replace(articles.title, ' \\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
             FROM loginKeyOnArticle
                      INNER JOIN articles ON loginKeyOnArticle.articleId = articles.articleId
             WHERE loginKeyId IN (SELECT loginKeyId
@@ -163,7 +108,6 @@ function isValidForm(form: any) {
 
 async function submitReview(form: Form, articleId: number, sessionId: string) {
     const client = await pool.connect();
-    console.log(form);
     try {
         await client.query("BEGIN");
         const result = await client.query(`
@@ -184,10 +128,8 @@ async function submitReview(form: Form, articleId: number, sessionId: string) {
             }
         }
         await client.query("COMMIT");
-        console.log("WE COMMIT")
     } catch (e) {
         throw e;
-        console.log("WE ROLL");
         await client.query("ROLLBACK");
         return false;
     } finally {
@@ -228,7 +170,7 @@ async function skipReviews(sessionId: string, client?: PoolClient) {
 
 async function getReviewedArticles(sessionId: string) {
     const result = await pool.query(`
-        SELECT regexp_replace(title, '\\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
+        SELECT regexp_replace(title, ' \\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
         INNER JOIN articles ON articles.articleId = loginKeyOnArticle.articleId
         WHERE loginKeyId = (
         	SELECT loginKeyId FROM sessions WHERE sessionId = $1

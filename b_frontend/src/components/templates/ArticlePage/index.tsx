@@ -20,7 +20,7 @@ export default (props: ArticlePageProps) => {
             <div className="side-margin"/>
             <div className="main-content">
                 <ArticleRenderer
-                    html={props.article.html}
+                    article={props.article}
                     onElementClicked={setClickedElement}
                 />
                 <button className="fake-link" onClick={() => {

@@ -52,64 +52,12 @@ const pool = new pg_1.default.Pool({
     password: db.password,
     database: db.database,
 });
-/*
-pool.connect().then(async () => {
-    const html_articles = fs.readFileSync(__dirname + "/../pattedyr_artikler.html", "utf8").split("\n\n");
-    let n = 0;
-    for (const article of html_articles) {
-        if (!article || article.length < 10) continue;
-        const title = article.split("<strong>")[1].split("</strong>")[0];
-        console.log(title);
-        if (++n > 5) break;
-        await pool.query("INSERT INTO articles (title, html) VALUES ($1, $2)", [title, article]);
-    }
-});
- */
-/*
-Database schema:
-
-articles:
-    id: int
-    title: text
-    html: text
-reviews:
-    id: int
-    rating: int
-    articleId: text
-    sessionId: text
-sessions:
-    id: text
-    loginKeyId: int
-loginKeys:
-    id: text
-    schoolName: text
-    grade: int
-    article1: int
-    article2: int
-    article3: int
- */
-/*
-Query to get current article:
-
-SELECT id, title, html FROM articles
-WHERE id IN (
-    SELECT article_1, article_2, article_3
-    FROM login_keys
-    WHERE id = (SELECT loginKeyId FROM sessions WHERE id = $1);
-) AND id NOT IN (
-    SELECT articleId FROM reviews WHERE sessionId = $1
-);
-
-Query to generate a new session:
-
-INSERT INTO sessions (id, loginKeyId) VALUES ($1, $2);
-*/
 function getState(sessionId) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const articles = yield pool.query(`
             SELECT
-                articles.articleId as id, regexp_replace(articles.title, '\\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
+                articles.articleId as id, regexp_replace(articles.title, ' \\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
             FROM loginKeyOnArticle
                      INNER JOIN articles ON loginKeyOnArticle.articleId = articles.articleId
             WHERE loginKeyId IN (SELECT loginKeyId
@@ -204,7 +152,6 @@ function submitReview(form, articleId, sessionId) {
     var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         const client = yield pool.connect();
-        console.log(form);
         try {
             yield client.query("BEGIN");
             const result = yield client.query(`
@@ -225,11 +172,9 @@ function submitReview(form, articleId, sessionId) {
                 }
             }
             yield client.query("COMMIT");
-            console.log("WE COMMIT");
         }
         catch (e) {
             throw e;
-            console.log("WE ROLL");
             yield client.query("ROLLBACK");
             return false;
         }
@@ -274,7 +219,7 @@ function skipReviews(sessionId, client) {
 function getReviewedArticles(sessionId) {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield pool.query(`
-        SELECT regexp_replace(title, '\\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
+        SELECT regexp_replace(title, ' \\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
         INNER JOIN articles ON articles.articleId = loginKeyOnArticle.articleId
         WHERE loginKeyId = (
         	SELECT loginKeyId FROM sessions WHERE sessionId = $1

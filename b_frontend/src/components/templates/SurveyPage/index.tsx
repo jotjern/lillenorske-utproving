@@ -33,6 +33,8 @@ export default (props: SurveyPageProps) => {
     const [rating, setRating] = useState<Rating | null>(null);
     const [learned_something, set_learned_something] = useState<LearnedSomething | null>(null);
 
+    console.log(props);
+
     return <SurveyFrame>
         <div className="survey">
             <p>Hvor vanskelig tror du teksten vil være for de som er ett år yngre enn deg?</p>

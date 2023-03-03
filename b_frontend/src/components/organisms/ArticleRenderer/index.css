@@ -4,7 +4,7 @@
     cursor: pointer;
 }
 
-.article.highlightable *:not(div):not(span):hover:not(:has(span:hover)) {
+.article.highlightable *:not(tbody):not(tr):not(td):not(div):not(ul):not(span):hover:not(:has(span:hover)) {
     outline: 1px solid blue;
     background-color: lightcyan;
     cursor: pointer;
@@ -14,4 +14,19 @@
     margin-block-start: 0;
     margin-block-end: 0;
     padding: 0.5em 0;
+}
+
+.article ul {
+    margin-left: 1em;
+}
+
+.article table {
+    border-collapse: collapse;
+    border: 1px solid black;
+    margin: 50px;
+}
+
+.article table td {
+    padding: 0.5em;
+    border: 1px solid black;
 }
