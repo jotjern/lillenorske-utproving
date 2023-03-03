@@ -80,6 +80,18 @@ export default (props: ArticleRendererProps) => {
             elem.replaceWith(...Array.from(elem.childNodes));
         });
 
+        article.querySelectorAll("h2").forEach(elem => {
+            if (elem.innerText.trim().match(/^Les mer i (Lille|Store) norske leksikon$/i)) {
+                elem.nextElementSibling?.remove();
+                elem.remove();
+                /*
+                conso
+                elem.nextSibling?.remove();
+                elem.remove();
+                 */
+            }
+        });
+
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
             if (props.wordColors && props.wordColors.has(i))
