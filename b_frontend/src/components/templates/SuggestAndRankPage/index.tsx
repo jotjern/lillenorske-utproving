@@ -3,7 +3,7 @@ import "./index.css";
 import FakeLink from "../../atoms/FakeLink";
 
 export type PageToRank = {title: string, articleId: number, articleNumber: number}
-export type PageRankings = {likedBest: number, easiest: number, hardest: number};
+export type PageRankings = {likedBest: number | null, easiest: number | null, hardest: number | null};
 
 interface SuggestionsPageProps {
     onFinished?: (suggestions: string, pageRankings: PageRankings) => void;
@@ -12,9 +12,9 @@ interface SuggestionsPageProps {
 
 export default (props: SuggestionsPageProps) => {
     const [suggestions, setSuggestions] = useState<string>("");
-    const [rankings, setRankings] = useState<{likedBest: number, easiest: number, hardest: number} | null>(null);
+    const [rankings, setRankings] = useState<PageRankings>({likedBest: null, easiest: null, hardest: null});
 
-    if (rankings === null)
+    if (rankings === null && props.pagesToRank.length > 1)
         return <div style={{fontSize: "1.6em", margin: "80px 300px"}}>
             <p style={{fontSize: "1.4em"}}>Nå har du lest noen av tekstene fra Lille norske leksikon.</p>
             <p>Hvilken likte du best?</p>
