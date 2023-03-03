@@ -33,11 +33,10 @@ export default (props: NoteDialogProps) => {
 
     return <div className="note-dialog-container" onClick={e => {
         if (props.onCloseDialog && e.target === e.currentTarget)
-            props.onCloseDialog(); }
-    }>
+            props.onCloseDialog();
+    }}>
         <div className="note-dialog">
             <button className="note-dialog-close" onClick={props.onCloseDialog}>X</button>
-            <br/>
             <p className="highlighted-segment">{props.element.text}</p>
             <div className="note-dialog-buttons">
                 <FakeLink onClick={() => submitNote("understanding")}>Jeg forsto ikke {props.element.type === "word" ? "ordet" : "avsnittet"}</FakeLink>
