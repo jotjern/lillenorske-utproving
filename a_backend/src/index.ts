@@ -343,10 +343,6 @@ app.post("/api/suggest", async (req, res) => {
         res.status(400).send("Missing rankings");
         return;
     }
-    if (typeof req.body.rankings.likedBest !== "number" || typeof req.body.rankings.easiest !== "number" || typeof req.body.rankings.hardest !== "number") {
-        res.status(400).send("Invalid rankings");
-        return;
-    }
 
     if (await submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings)) {
         res.status(200).send("OK");
