@@ -5,8 +5,8 @@
 }
 
 .article.highlightable *:not(div):not(span):hover:not(:has(span:hover)) {
-    background-color: lightblue;
     outline: 1px solid blue;
+    background-color: lightcyan;
     cursor: pointer;
 }
 
