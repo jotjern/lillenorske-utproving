@@ -88,7 +88,7 @@ export default (props: SurveyPageProps) => {
             </FakeLink>
             <br/>
             {
-                props.article.number === 2 && <FakeLink
+                props.article.number < 3 && <FakeLink
                     onClick={() => {
                         if (difficulty === null || suitable_age === null || rating === null || learned_something === null) return;
                         if (props.onFinished) props.onFinished({
