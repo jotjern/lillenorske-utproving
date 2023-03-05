@@ -82,32 +82,32 @@ type Form = {
     },
 }
 
-function isValidForm(form: any) {
-    if (typeof form !== "object") return false;
-    if (typeof form.pre_knowledge !== "string") return false;
-    if ([ "none", "some", "a lot" ].indexOf(form.pre_knowledge) === -1) return false;
-    if (typeof form.survey !== "object") return false;
-    if (typeof form.survey.skip !== "boolean") return false;
-    if (typeof form.survey.difficulty !== "string") return false;
-    if ([ "easy", "medium", "hard" ].indexOf(form.survey.difficulty) === -1) return false;
-    if (typeof form.survey.rating !== "string") return false;
-    if ([ "bad", "ok", "good" ].indexOf(form.survey.rating) === -1) return false;
-    if (typeof form.survey.suitable_age !== "string") return false;
-    if ([ "small_children", "8-9", "10-11", "12-13", "adult" ].indexOf(form.survey.suitable_age) === -1) return false;
-    if (typeof form.survey.learned_something !== "string") return false;
-    if ([ "yes", "no" ].indexOf(form.survey.learned_something) === -1) return false;
-    if (!Array.isArray(form.article_notes)) return false;
+function isInvalidForm(form: any): string | null {
+    if (typeof form !== "object") return "Invalid form type";
+    if (typeof form.pre_knowledge !== "string") return "Invalid pre_knowledge type";
+    if ([ "none", "some", "a lot" ].indexOf(form.pre_knowledge) === -1) return "Invalid pre_knowledge value";
+    if (typeof form.survey !== "object") return "Invalid survey type";
+    if (typeof form.survey.skip !== "boolean") return "Invalid survey.skip type";
+    if (typeof form.survey.difficulty !== "string") return "Invalid survey.difficulty type";
+    if ([ "easy", "medium", "hard" ].indexOf(form.survey.difficulty) === -1) return "Invalid survey.difficulty value";
+    if (typeof form.survey.rating !== "string") return "Invalid survey.rating type";
+    if ([ "bad", "ok", "good" ].indexOf(form.survey.rating) === -1) return "Invalid survey.rating value";
+    if (typeof form.survey.suitable_age !== "string") return "Invalid survey.suitable_age type";
+    if ([ "small_children", "8-9", "10-11", "12-13", "adult" ].indexOf(form.survey.suitable_age) === -1) return "Invalid survey.suitable_age value";
+    if (typeof form.survey.learned_something !== "string") return "Invalid survey.learned_something type";
+    if ([ "yes", "no" ].indexOf(form.survey.learned_something) === -1) return "Invalid survey.learned_something value";
+    if (!Array.isArray(form.article_notes)) return "Invalid article_notes type";
     for (const note of form.article_notes) {
-        if (typeof note !== "object") return false;
-        if (typeof note.reason !== "string") return false;
-        if ([ "understanding", "unnecessary", "good" ].indexOf(note.reason) === -1) return false;
-        if (typeof note.index !== "number") return false;
-        if (typeof note.text !== "string") return false;
-        if (note.text.length > 1000 || note.text.length < 1) return false;
-        if (typeof note.type !== "string") return false;
-        if (["word", "element"].indexOf(note.type) === -1) return false;
+        if (typeof note !== "object") return "Invalid article_note type";
+        if (typeof note.reason !== "string") return "Invalid article_note.reason type";
+        if ([ "understanding", "unnecessary", "good" ].indexOf(note.reason) === -1) return "Invalid article_note.reason value";
+        if (typeof note.index !== "number") return "Invalid article_note.index type";
+        if (typeof note.text !== "string") return "Invalid article_note.text type";
+        if (note.text.length > 1000 || note.text.length < 1) return "Invalid article_note.text length";
+        if (typeof note.type !== "string") return "Invalid article_note.type type";
+        if (["word", "element"].indexOf(note.type) === -1) return "Invalid article_note.type value";
     }
-    return true;
+    return null;
 }
 
 async function submitReview(form: Form, articleId: number, sessionId: string) {
@@ -321,8 +321,9 @@ app.post("/api/state", async (req, res) => {
         res.status(401).send("Invalid session");
         return;
     }
-    if (!isValidForm(req.body)) {
-        res.status(400).send("Invalid review");
+    const invalid_reason = isInvalidForm(req.body);
+    if (invalid_reason) {
+        res.status(400).send(`Invalid review: ${invalid_reason}`);
         return;
     }
     if (await submitReview(req.body, state.article?.id, sessionId)) {
