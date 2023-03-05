@@ -3,6 +3,12 @@
     margin: 75px 150px;
 }
 
+@media screen and (max-width: 1000px) {
+    .survey-frame {
+        margin: 75px 0;
+    }
+}
+
 .survey-frame > div {
     flex: 1;
 }

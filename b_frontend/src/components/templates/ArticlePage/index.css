@@ -5,11 +5,17 @@
 }
 
 .app .side-margin {
-    flex: 1;
+    flex: 3;
 }
 
 .app .main-content {
-    flex: 3;
+    flex: 9;
     font-size: 2em;
     min-height: 100vh;
+}
+
+@media screen and (max-width: 1000px) {
+    .app .side-margin {
+        flex: 1;
+    }
 }

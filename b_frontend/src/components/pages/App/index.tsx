@@ -80,7 +80,7 @@ function App() {
             method: has_form ? "POST" : "GET"
         })
             .then(response => {
-                if (response.status === 403) {
+                if (response.status === 403 || response.status === 401) {
                     window.history.pushState(null, "", "/");
                     setState({page: "unauthorized"});
                 } else {
