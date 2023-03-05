@@ -42,6 +42,7 @@ const pg_1 = __importDefault(require("pg"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const crypto = __importStar(require("crypto"));
 const fs = __importStar(require("fs"));
+const child_process_1 = require("child_process");
 const port = process.env.PORT || 15151;
 const app = (0, express_1.default)();
 const db = JSON.parse(fs.readFileSync(__dirname + "/../db.json", "utf8"));
@@ -52,6 +53,11 @@ const pool = new pg_1.default.Pool({
     password: db.password,
     database: db.database,
 });
+function emergencyReset() {
+    return __awaiter(this, void 0, void 0, function* () {
+        (0, child_process_1.exec)("sudo systemctl restart backend.service");
+    });
+}
 function getState(sessionId) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -152,6 +158,39 @@ function isInvalidForm(form) {
             return "Invalid article_note.type value";
     }
     return null;
+}
+function getSchoolStats() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield pool.query(`
+        SELECT schoolName, grade, count(*) AS count
+        FROM sessions
+        JOIN loginKeys USING (loginKeyId)
+        GROUP BY schoolName, grade`);
+        return result.rows.map(row => ({
+            schoolName: row.schoolname,
+            grade: row.grade,
+            count: parseInt(row.count)
+        }));
+    });
+}
+function getControlPanelStats() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield pool.query(`
+        SELECT
+            (SELECT count(*) FROM sessions) AS sessions,
+            (SELECT count(*) FROM articles) AS articles,
+            (SELECT count(*) FROM reviews) AS reviews,
+            (SELECT count(*) FROM reviewNotes) AS reviewNotes,
+            (SELECT count(*) FROM suggestionsAndRankings) AS suggestionsAndRankings
+    `);
+        return {
+            sessions: parseInt(result.rows[0].sessions),
+            articles: parseInt(result.rows[0].articles),
+            reviews: parseInt(result.rows[0].reviews),
+            reviewNotes: parseInt(result.rows[0].reviewnotes),
+            suggestionsAndRankings: parseInt(result.rows[0].suggestionsandrankings)
+        };
+    });
 }
 function submitReview(form, articleId, sessionId) {
     var _a, _b, _c, _d, _e;
@@ -303,24 +342,14 @@ function createLoginKey(schoolName, grade, articles) {
 }
 function submitSuggestionsAndRankings(sessionId, suggestion, rankings) {
     return __awaiter(this, void 0, void 0, function* () {
-        const client = yield pool.connect();
         try {
-            yield client.query("BEGIN");
-            yield client.query(`
+            yield pool.query(`
             INSERT INTO suggestionsAndRankings (sessionId, suggestion, likedBestArticleId, easiestArticleId, hardestArticleId)
             VALUES ($1, $2, $3, $4, $5);
         `, [sessionId, suggestion, rankings.likedBest, rankings.easiest, rankings.hardest]);
-            yield client.query("COMMIT");
         }
         catch (e) {
-            yield client.query("ROLLBACK");
             return false;
-        }
-        finally {
-            try {
-                client.release();
-            }
-            catch (e) { }
         }
         return true;
     });
@@ -337,6 +366,19 @@ app.use((req, res, next) => {
     res.on("finish", () => console.log(`${req.method} ${req.url} -> ${res.statusCode}`));
     next();
 });
+app.post("/api/admin/controlpanel", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+        return res.status(403).send("Invalid token");
+    const state = yield getControlPanelStats();
+    const schoolStats = yield getSchoolStats();
+    res.status(200).json({ state, schoolStats });
+}));
+app.post("/api/admin/emergencyreset", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+        return res.status(403).send("Invalid token");
+    yield emergencyReset();
+    res.status(200).send("OK");
+}));
 app.post("/api/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const code = req.body.code;
     if (!code) {
@@ -354,6 +396,7 @@ app.post("/api/login", (req, res) => __awaiter(void 0, void 0, void 0, function*
 app.use((req, res, next) => {
     const sessionId = req.cookies.session;
     if (!sessionId) {
+        console.log("no");
         res.status(403).send("Missing session");
         return;
     }
@@ -424,15 +467,17 @@ app.post("/api/suggest", (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(500).send("Internal server error");
     }
 }));
-app.get("/api/admin/notes/:article", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/*
+app.get("/api/admin/notes/:article", async (req, res) => {
     const article = req.params.article;
     if (!article) {
         res.status(400).send("Missing article");
         return;
     }
-    const notes = yield getArticleNotes(article);
+    const notes = await getArticleNotes(article);
     res.status(200).json(notes);
-}));
+});
+ */
 app.use((err, req, res, next) => {
     // Get the whole error as a string
     console.log(err.stack.toString());

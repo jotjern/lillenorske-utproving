@@ -1,0 +1,56 @@
+.control-panel {
+    display: flex;
+}
+
+.side-margin {
+    flex: 1;
+}
+
+.main-content {
+    flex: 3;
+    background-color: #79D1EA;
+    padding: 20px;
+    font-size: 1.5em;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    color: black;
+}
+
+td h2, td p {
+    margin: 0;
+}
+
+td p {
+    font-weight: bold;
+    color: #5C5C5C;
+}
+
+td {
+    padding: 50px 10px;
+}
+
+tr {
+    border-bottom: 1px solid #5C5C5C;
+}
+
+.emergency-button {
+    background-color: #FF0000;
+    color: white;
+    font-size: 1.5em;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    margin: 10px;
+    outline: none;
+    cursor: pointer;
+}
+
+h1 {
+    font-size: 2em;
+    margin: 10px 0 0 0;
+}

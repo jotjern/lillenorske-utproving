@@ -5,6 +5,7 @@ import pg, {PoolClient} from "pg";
 import cookieParser from "cookie-parser";
 import * as crypto from "crypto";
 import * as fs from "fs";
+import {exec} from "child_process";
 
 const port = process.env.PORT || 15151;
 const app = express();
@@ -17,6 +18,10 @@ const pool = new pg.Pool({
     password: db.password,
     database: db.database,
 });
+
+async function emergencyReset() {
+    exec("sudo systemctl restart backend.service");
+}
 
 async function getState(sessionId: string) {
     try {
@@ -108,6 +113,37 @@ function isInvalidForm(form: any): string | null {
         if (["word", "element"].indexOf(note.type) === -1) return "Invalid article_note.type value";
     }
     return null;
+}
+
+async function getSchoolStats() {
+    const result = await pool.query(`
+        SELECT schoolName, grade, count(*) AS count
+        FROM sessions
+        JOIN loginKeys USING (loginKeyId)
+        GROUP BY schoolName, grade`);
+    return result.rows.map(row => ({
+        schoolName: row.schoolname,
+        grade: row.grade,
+        count: parseInt(row.count)
+    }));
+}
+
+async function getControlPanelStats() {
+    const result = await pool.query(`
+        SELECT
+            (SELECT count(*) FROM sessions) AS sessions,
+            (SELECT count(*) FROM articles) AS articles,
+            (SELECT count(*) FROM reviews) AS reviews,
+            (SELECT count(*) FROM reviewNotes) AS reviewNotes,
+            (SELECT count(*) FROM suggestionsAndRankings) AS suggestionsAndRankings
+    `);
+    return {
+        sessions: parseInt(result.rows[0].sessions),
+        articles: parseInt(result.rows[0].articles),
+        reviews: parseInt(result.rows[0].reviews),
+        reviewNotes: parseInt(result.rows[0].reviewnotes),
+        suggestionsAndRankings: parseInt(result.rows[0].suggestionsandrankings)
+    }
 }
 
 async function submitReview(form: Form, articleId: number, sessionId: string) {
@@ -247,21 +283,13 @@ async function createLoginKey(schoolName: string, grade: number, articles: numbe
 type PageRankings = {likedBest: number, easiest: number, hardest: number};
 
 async function submitSuggestionsAndRankings(sessionId: string, suggestion: string, rankings: PageRankings) {
-    const client = await pool.connect();
     try {
-        await client.query("BEGIN");
-        await client.query(`
+        await pool.query(`
             INSERT INTO suggestionsAndRankings (sessionId, suggestion, likedBestArticleId, easiestArticleId, hardestArticleId)
             VALUES ($1, $2, $3, $4, $5);
         `, [sessionId, suggestion, rankings.likedBest, rankings.easiest, rankings.hardest]);
-        await client.query("COMMIT");
     } catch (e) {
-        await client.query("ROLLBACK");
         return false;
-    } finally {
-        try {
-            client.release();
-        } catch (e) {}
     }
     return true;
 }
@@ -277,6 +305,21 @@ app.use(cookieParser());
 app.use((req, res, next) => {
     res.on("finish", () => console.log(`${req.method} ${req.url} -> ${res.statusCode}`));
     next();
+});
+
+app.post("/api/admin/controlpanel", async (req, res) => {
+    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+        return res.status(403).send("Invalid token");
+    const state = await getControlPanelStats();
+    const schoolStats = await getSchoolStats();
+    res.status(200).json({state, schoolStats});
+});
+
+app.post("/api/admin/emergencyreset", async (req, res) => {
+    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+        return res.status(403).send("Invalid token");
+    await emergencyReset();
+    res.status(200).send("OK");
 });
 
 app.post("/api/login", async (req, res) => {
@@ -297,6 +340,7 @@ app.post("/api/login", async (req, res) => {
 app.use((req, res, next) => {
     const sessionId = req.cookies.session;
     if (!sessionId) {
+        console.log("no")
         res.status(403).send("Missing session");
         return;
     }
@@ -368,6 +412,7 @@ app.post("/api/suggest", async (req, res) => {
     }
 });
 
+/*
 app.get("/api/admin/notes/:article", async (req, res) => {
     const article = req.params.article;
     if (!article) {
@@ -377,6 +422,7 @@ app.get("/api/admin/notes/:article", async (req, res) => {
     const notes = await getArticleNotes(article);
     res.status(200).json(notes);
 });
+ */
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Get the whole error as a string

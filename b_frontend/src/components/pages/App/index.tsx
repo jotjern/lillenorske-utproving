@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ArticlePage from "../../templates/ArticlePage";
 import { Note } from "../../organisms/NoteDialog";
 import PreKnowledgePage, {PreKnowledge} from "../../templates/PreKnowledgePage";
+import ControlPanel from "../../templates/ControlPanel";
 import SurveyPage, {Survey} from "../../templates/SurveyPage";
 import SuggestionPage, {PageToRank} from "../../templates/SuggestAndRankPage";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -13,10 +14,6 @@ interface ImportMetaEnv {
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
-console.log(API_URL);
-// to set the API_URL, run `npm run dev -- --define:VITE_API_URL="http://localhost:5000"`
-
-console.log(API_URL);
 
 interface Form {
     pre_knowledge: PreKnowledge | null;
@@ -31,6 +28,8 @@ interface Article {
 }
 
 function App() {
+    if (window.location.pathname === "/controlpanel")
+        return <ControlPanel/>
     const [article, setArticle] = useState<Article | null>(null);
     const [form, setForm] = useState<Form>({
         pre_knowledge: null,
