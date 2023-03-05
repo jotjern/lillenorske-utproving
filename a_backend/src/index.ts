@@ -133,7 +133,6 @@ async function submitReview(form: Form, articleId: number, sessionId: string) {
         }
         await client.query("COMMIT");
     } catch (e) {
-        throw e;
         await client.query("ROLLBACK");
         return false;
     } finally {
@@ -167,8 +166,9 @@ async function skipReviews(sessionId: string, client?: PoolClient) {
         `, [sessionId, sessionId, sessionId]);
         return true;
     } catch (e) {
-        throw e;
         return false;
+    } finally {
+        client.release();
     }
 }
 
@@ -256,9 +256,10 @@ async function submitSuggestionsAndRankings(sessionId: string, suggestion: strin
 
         await client.query("COMMIT");
     } catch (e) {
-        throw e;
         await client.query("ROLLBACK");
         return false;
+    } finally {
+        client.release();
     }
     return true;
 }
