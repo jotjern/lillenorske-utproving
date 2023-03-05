@@ -215,8 +215,8 @@ async function getArticleNotes(article: string) {
     const result = await pool.query(`
         SELECT index, reason, type FROM reviewNotes
         INNER JOIN reviews ON reviews.reviewId = reviewNotes.reviewId
-        WHERE reviews.articleId = 39
-    `);
+        WHERE reviews.articleId = $1
+    `, [article]);
     return result.rows.map(row => ({
         index: row.index,
         reason: row.reason,
