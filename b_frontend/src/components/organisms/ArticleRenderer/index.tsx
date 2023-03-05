@@ -68,7 +68,7 @@ export default (props: ArticleRendererProps) => {
         });
 
         article.querySelectorAll("h2").forEach(elem => {
-            if (elem.innerText.trim().match(/^Les mer i (Lille|Store) norske leksikon$/i)) {
+            if (elem.innerText.trim().match(/^Les mei?r i (Lille|Store|Vesle) norske leksikon$/i)) {
                 elem.nextElementSibling?.remove();
                 elem.remove();
             }
