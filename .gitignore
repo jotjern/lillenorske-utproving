@@ -16,3 +16,4 @@ temp
 TODOs.md
 .eslintcache
 a_backend/db.json
+a_backend/build/*

@@ -71,11 +71,17 @@ function getState(sessionId) {
             if (articles.rows.length === 0) {
                 const suggestions = yield pool.query(`SELECT count(*) FROM suggestionsAndRankings WHERE sessionId = $1`, [sessionId]);
                 if (parseInt(suggestions.rows[0].count) === 0) {
-                    const reviewedArticles = yield getReviewedArticles(sessionId);
-                    return {
-                        state: "suggest",
-                        articlesToRank: reviewedArticles
-                    };
+                    const session = yield pool.query("SELECT count(*) FROM sessions WHERE sessionId = $1", [sessionId]);
+                    if (parseInt(session.rows[0].count) === 0) {
+                        return null;
+                    }
+                    else {
+                        const reviewedArticles = yield getReviewedArticles(sessionId);
+                        return {
+                            state: "suggest",
+                            articlesToRank: reviewedArticles
+                        };
+                    }
                 }
                 else {
                     return {
@@ -94,7 +100,6 @@ function getState(sessionId) {
             };
         }
         catch (e) {
-            throw e;
             return null;
         }
     });
@@ -393,11 +398,16 @@ app.post("/api/suggest", (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(400).send("Missing rankings");
         return;
     }
-    if (typeof req.body.rankings.likedBest !== "number" || typeof req.body.rankings.easiest !== "number" || typeof req.body.rankings.hardest !== "number") {
-        res.status(400).send("Invalid rankings");
+    let result;
+    try {
+        result = yield submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings);
+    }
+    catch (e) {
+        res.status(400);
+        res.send("Invalid session");
         return;
     }
-    if (yield submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings)) {
+    if (result) {
         res.status(200).send("OK");
     }
     else {
@@ -413,6 +423,14 @@ app.get("/api/admin/notes/:article", (req, res) => __awaiter(void 0, void 0, voi
     const notes = yield getArticleNotes(article);
     res.status(200).json(notes);
 }));
+app.get("/api/crash", (req, res) => {
+    throw new Error("Crash");
+});
+app.use((err, req, res, next) => {
+    // Get the whole error as a string
+    console.log(err.stack.toString());
+    res.status(500).send("Internal server error");
+});
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}!`);
 });

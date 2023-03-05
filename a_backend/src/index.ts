@@ -40,10 +40,15 @@ async function getState(sessionId: string) {
                 [sessionId]
             );
             if (parseInt(suggestions.rows[0].count) === 0) {
-                const reviewedArticles = await getReviewedArticles(sessionId);
-                return {
-                    state: "suggest",
-                    articlesToRank: reviewedArticles
+                const session = await pool.query("SELECT count(*) FROM sessions WHERE sessionId = $1", [sessionId]);
+                if (parseInt(session.rows[0].count) === 0) {
+                    return null;
+                } else {
+                    const reviewedArticles = await getReviewedArticles(sessionId);
+                    return {
+                        state: "suggest",
+                        articlesToRank: reviewedArticles
+                    }
                 }
             } else {
                 return {
@@ -61,7 +66,6 @@ async function getState(sessionId: string) {
             }
         }
     } catch (e) {
-        throw e;
         return null;
     }
 }
@@ -344,7 +348,15 @@ app.post("/api/suggest", async (req, res) => {
         return;
     }
 
-    if (await submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings)) {
+    let result;
+    try {
+        result = await submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings);
+    } catch (e) {
+        res.status(400);
+        res.send("Invalid session");
+        return;
+    }
+    if (result) {
         res.status(200).send("OK");
     } else {
         res.status(500).send("Internal server error");
@@ -359,6 +371,16 @@ app.get("/api/admin/notes/:article", async (req, res) => {
     }
     const notes = await getArticleNotes(article);
     res.status(200).json(notes);
+});
+
+app.get("/api/crash", (req, res) => {
+    throw new Error("Crash");
+});
+
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // Get the whole error as a string
+    console.log(err.stack.toString());
+    res.status(500).send("Internal server error");
 });
 
 app.listen(port, () => {
