@@ -136,8 +136,9 @@ async function submitReview(form: Form, articleId: number, sessionId: string) {
         await client.query("ROLLBACK");
         return false;
     } finally {
-        if (client)
+        try {
             client.release();
+        } catch (e) {
     }
     return true;
 }
@@ -169,8 +170,9 @@ async function skipReviews(sessionId: string, client?: PoolClient) {
     } catch (e) {
         return false;
     } finally {
-        if (client)
+        try {
             client.release();
+        } catch (e) {}
     }
 }
 
@@ -240,8 +242,9 @@ async function createLoginKey(schoolName: string, grade: number, articles: numbe
         await client.query("ROLLBACK");
         return false;
     } finally {
-        if (client)
+        try {
             client.release();
+        } catch (e) {}
     }
     return true;
 }
@@ -262,8 +265,9 @@ async function submitSuggestionsAndRankings(sessionId: string, suggestion: strin
         await client.query("ROLLBACK");
         return false;
     } finally {
-        if (client)
+        try {
             client.release();
+        } catch (e) {}
     }
     return true;
 }
