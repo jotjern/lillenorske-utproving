@@ -96,7 +96,7 @@ export default () => {
                                 <p>{schoolStat.grade ?? '...'}</p>
                             </td>
                             <td>
-                                <h2>Antall</h2>
+                                <h2>Antall brukere</h2>
                                 <p>{schoolStat.count ?? '...'}</p>
                             </td>
                         </tr>
