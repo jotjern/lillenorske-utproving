@@ -104,54 +104,54 @@ function getState(sessionId) {
         }
     });
 }
-function isValidForm(form) {
+function isInvalidForm(form) {
     if (typeof form !== "object")
-        return false;
+        return "Invalid form type";
     if (typeof form.pre_knowledge !== "string")
-        return false;
+        return "Invalid pre_knowledge type";
     if (["none", "some", "a lot"].indexOf(form.pre_knowledge) === -1)
-        return false;
+        return "Invalid pre_knowledge value";
     if (typeof form.survey !== "object")
-        return false;
+        return "Invalid survey type";
     if (typeof form.survey.skip !== "boolean")
-        return false;
+        return "Invalid survey.skip type";
     if (typeof form.survey.difficulty !== "string")
-        return false;
+        return "Invalid survey.difficulty type";
     if (["easy", "medium", "hard"].indexOf(form.survey.difficulty) === -1)
-        return false;
+        return "Invalid survey.difficulty value";
     if (typeof form.survey.rating !== "string")
-        return false;
+        return "Invalid survey.rating type";
     if (["bad", "ok", "good"].indexOf(form.survey.rating) === -1)
-        return false;
+        return "Invalid survey.rating value";
     if (typeof form.survey.suitable_age !== "string")
-        return false;
+        return "Invalid survey.suitable_age type";
     if (["small_children", "8-9", "10-11", "12-13", "adult"].indexOf(form.survey.suitable_age) === -1)
-        return false;
+        return "Invalid survey.suitable_age value";
     if (typeof form.survey.learned_something !== "string")
-        return false;
+        return "Invalid survey.learned_something type";
     if (["yes", "no"].indexOf(form.survey.learned_something) === -1)
-        return false;
+        return "Invalid survey.learned_something value";
     if (!Array.isArray(form.article_notes))
-        return false;
+        return "Invalid article_notes type";
     for (const note of form.article_notes) {
         if (typeof note !== "object")
-            return false;
+            return "Invalid article_note type";
         if (typeof note.reason !== "string")
-            return false;
+            return "Invalid article_note.reason type";
         if (["understanding", "unnecessary", "good"].indexOf(note.reason) === -1)
-            return false;
+            return "Invalid article_note.reason value";
         if (typeof note.index !== "number")
-            return false;
+            return "Invalid article_note.index type";
         if (typeof note.text !== "string")
-            return false;
+            return "Invalid article_note.text type";
         if (note.text.length > 1000 || note.text.length < 1)
-            return false;
+            return "Invalid article_note.text length";
         if (typeof note.type !== "string")
-            return false;
+            return "Invalid article_note.type type";
         if (["word", "element"].indexOf(note.type) === -1)
-            return false;
+            return "Invalid article_note.type value";
     }
-    return true;
+    return null;
 }
 function submitReview(form, articleId, sessionId) {
     var _a, _b, _c, _d, _e;
@@ -179,19 +179,20 @@ function submitReview(form, articleId, sessionId) {
             yield client.query("COMMIT");
         }
         catch (e) {
-            throw e;
             yield client.query("ROLLBACK");
             return false;
         }
         finally {
-            client.release();
+            try {
+                client.release();
+            }
+            catch (e) { }
         }
         return true;
     });
 }
 function skipReviews(sessionId, client) {
     return __awaiter(this, void 0, void 0, function* () {
-        client = client !== null && client !== void 0 ? client : yield pool.connect();
         try {
             yield client.query(`
             INSERT INTO reviews
@@ -216,7 +217,6 @@ function skipReviews(sessionId, client) {
             return true;
         }
         catch (e) {
-            throw e;
             return false;
         }
     });
@@ -263,8 +263,8 @@ function getArticleNotes(article) {
         const result = yield pool.query(`
         SELECT index, reason, type FROM reviewNotes
         INNER JOIN reviews ON reviews.reviewId = reviewNotes.reviewId
-        WHERE reviews.articleId = 39
-    `);
+        WHERE reviews.articleId = $1
+    `, [article]);
         return result.rows.map(row => ({
             index: row.index,
             reason: row.reason,
@@ -293,7 +293,10 @@ function createLoginKey(schoolName, grade, articles) {
             return false;
         }
         finally {
-            client.release();
+            try {
+                client.release();
+            }
+            catch (e) { }
         }
         return true;
     });
@@ -310,9 +313,14 @@ function submitSuggestionsAndRankings(sessionId, suggestion, rankings) {
             yield client.query("COMMIT");
         }
         catch (e) {
-            throw e;
             yield client.query("ROLLBACK");
             return false;
+        }
+        finally {
+            try {
+                client.release();
+            }
+            catch (e) { }
         }
         return true;
     });
@@ -356,6 +364,7 @@ app.get("/api/reviewed", (req, res) => __awaiter(void 0, void 0, void 0, functio
     res.json(reviewed);
 }));
 app.get("/api/state", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("wow");
     const state = yield getState(req.cookies.session);
     if (state === null) {
         res.status(401).send("Invalid session");
@@ -371,8 +380,9 @@ app.post("/api/state", (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(401).send("Invalid session");
         return;
     }
-    if (!isValidForm(req.body)) {
-        res.status(400).send("Invalid review");
+    const invalid_reason = isInvalidForm(req.body);
+    if (invalid_reason) {
+        res.status(400).send(`Invalid review: ${invalid_reason}`);
         return;
     }
     if (yield submitReview(req.body, (_a = state.article) === null || _a === void 0 ? void 0 : _a.id, sessionId)) {
@@ -423,9 +433,6 @@ app.get("/api/admin/notes/:article", (req, res) => __awaiter(void 0, void 0, voi
     const notes = yield getArticleNotes(article);
     res.status(200).json(notes);
 }));
-app.get("/api/crash", (req, res) => {
-    throw new Error("Crash");
-});
 app.use((err, req, res, next) => {
     // Get the whole error as a string
     console.log(err.stack.toString());

@@ -143,8 +143,7 @@ async function submitReview(form: Form, articleId: number, sessionId: string) {
     return true;
 }
 
-async function skipReviews(sessionId: string, client?: PoolClient) {
-    client = client ?? await pool.connect();
+async function skipReviews(sessionId: string, client: PoolClient) {
     try {
         await client.query(`
             INSERT INTO reviews
@@ -169,10 +168,6 @@ async function skipReviews(sessionId: string, client?: PoolClient) {
         return true;
     } catch (e) {
         return false;
-    } finally {
-        try {
-            client.release();
-        } catch (e) {}
     }
 }
 
@@ -259,7 +254,6 @@ async function submitSuggestionsAndRankings(sessionId: string, suggestion: strin
             INSERT INTO suggestionsAndRankings (sessionId, suggestion, likedBestArticleId, easiestArticleId, hardestArticleId)
             VALUES ($1, $2, $3, $4, $5);
         `, [sessionId, suggestion, rankings.likedBest, rankings.easiest, rankings.hardest]);
-
         await client.query("COMMIT");
     } catch (e) {
         await client.query("ROLLBACK");
@@ -315,6 +309,7 @@ app.get("/api/reviewed", async (req, res) => {
 });
 
 app.get("/api/state", async (req, res) => {
+    console.log("wow");
     const state = await getState(req.cookies.session);
     if (state === null) {
         res.status(401).send("Invalid session");
