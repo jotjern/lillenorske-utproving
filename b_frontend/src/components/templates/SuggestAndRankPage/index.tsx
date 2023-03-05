@@ -14,7 +14,9 @@ export default (props: SuggestionsPageProps) => {
     const [suggestions, setSuggestions] = useState<string>("");
     const [rankings, setRankings] = useState<PageRankings>({likedBest: null, easiest: null, hardest: null});
 
-    if (rankings === null && props.pagesToRank.length > 1)
+    const hasRankings = rankings.likedBest !== null && rankings.easiest !== null && rankings.hardest !== null;
+
+    if (hasRankings && props.pagesToRank.length > 1)
         return <div style={{fontSize: "1.6em", margin: "80px 300px"}}>
             <p style={{fontSize: "1.4em"}}>Nå har du lest noen av tekstene fra Lille norske leksikon.</p>
             <p>Hvilken likte du best?</p>
