@@ -28,7 +28,7 @@ interface Article {
 }
 
 function App() {
-    if (window.location.pathname === "/controlpanel")
+    if (window.location.pathname.startsWith("/controlpanel"))
         return <ControlPanel/>
     const [article, setArticle] = useState<Article | null>(null);
     const [form, setForm] = useState<Form>({
