@@ -383,10 +383,6 @@ app.get("/api/admin/notes/:article", async (req, res) => {
     res.status(200).json(notes);
 });
 
-app.get("/api/crash", (req, res) => {
-    throw new Error("Crash");
-});
-
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Get the whole error as a string
     console.log(err.stack.toString());
