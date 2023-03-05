@@ -138,7 +138,7 @@ async function submitReview(form: Form, articleId: number, sessionId: string) {
     } finally {
         try {
             client.release();
-        } catch (e) {
+        } catch (e) { }
     }
     return true;
 }
