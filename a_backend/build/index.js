@@ -43,6 +43,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const crypto = __importStar(require("crypto"));
 const fs = __importStar(require("fs"));
 const child_process_1 = require("child_process");
+const crypto_1 = require("crypto");
 const port = process.env.PORT || 15151;
 const app = (0, express_1.default)();
 const db = JSON.parse(fs.readFileSync(__dirname + "/../db.json", "utf8"));
@@ -53,6 +54,8 @@ const pool = new pg_1.default.Pool({
     password: db.password,
     database: db.database,
 });
+const md5 = (content) => (0, crypto_1.createHash)("md5").update(Buffer.from(content, "utf-8")).digest("hex");
+const admin_password = "0d96635dbb24b52d0a791775b4130571";
 function emergencyReset() {
     return __awaiter(this, void 0, void 0, function* () {
         (0, child_process_1.exec)("sudo systemctl restart backend.service");
@@ -367,14 +370,14 @@ app.use((req, res, next) => {
     next();
 });
 app.post("/api/admin/controlpanel", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+    if (typeof req.body.password !== "string" || md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
     const state = yield getControlPanelStats();
     const schoolStats = yield getSchoolStats();
     res.status(200).json({ state, schoolStats });
 }));
 app.post("/api/admin/emergencyreset", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+    if (md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
     yield emergencyReset();
     res.status(200).send("OK");

@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import {exec} from "child_process";
+import { createHash } from "crypto";
 
 const port = process.env.PORT || 15151;
 const app = express();
@@ -18,6 +19,9 @@ const pool = new pg.Pool({
     password: db.password,
     database: db.database,
 });
+
+const md5 = (content: string) => createHash("md5").update(Buffer.from(content, "utf-8")).digest("hex");
+const admin_password = "0d96635dbb24b52d0a791775b4130571";
 
 async function emergencyReset() {
     exec("sudo systemctl restart backend.service");
@@ -308,7 +312,7 @@ app.use((req, res, next) => {
 });
 
 app.post("/api/admin/controlpanel", async (req, res) => {
-    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+    if (typeof req.body.password !== "string" || md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
     const state = await getControlPanelStats();
     const schoolStats = await getSchoolStats();
@@ -316,7 +320,7 @@ app.post("/api/admin/controlpanel", async (req, res) => {
 });
 
 app.post("/api/admin/emergencyreset", async (req, res) => {
-    if (req.body.token !== "qIxpauJ5xbhqGiTz")
+    if (md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
     await emergencyReset();
     res.status(200).send("OK");

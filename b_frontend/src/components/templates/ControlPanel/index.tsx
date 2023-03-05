@@ -23,7 +23,7 @@ export default () => {
 
     const fetchStats = async () => await (await fetch(API_URL + "/admin/controlpanel", {
         method: "POST",
-        body: JSON.stringify({token: window.location.search.substring(1)}),
+        body: JSON.stringify({password: window.location.search.substring(1)}),
         headers: {
             "Content-Type": "application/json"
         }
