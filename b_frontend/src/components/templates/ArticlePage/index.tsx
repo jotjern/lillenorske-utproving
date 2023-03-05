@@ -29,6 +29,7 @@ export default (props: ArticlePageProps) => {
             </div>
             <div className="side-margin"/>
         </div>
+        <br/>
         <NoteDialog
             element={clickedElement}
             onSubmitNote={note => {
