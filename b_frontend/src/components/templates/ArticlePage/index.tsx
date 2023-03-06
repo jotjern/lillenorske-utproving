@@ -26,10 +26,14 @@ export default (props: ArticlePageProps) => {
 
     console.log(wordColorMap);
 
+    const capitalized_title = props.article.title.charAt(0).toUpperCase() + props.article.title.slice(1);
+
     return <>
         <div className="app">
             <div className="side-margin"/>
             <div className="main-content">
+                <h2 style={{backgroundColor: "lightblue", padding: "50px", margin: "0"}}>Trykk på ord eller avsnitt du syntes er vanskelige, unødvendige eller ekstra bra!</h2>
+                <h1>{capitalized_title}</h1>
                 <ArticleRenderer
                     article={props.article}
                     onElementClicked={element => setClickedElement(element)}
