@@ -16,7 +16,7 @@ CREATE TABLE articles (
 CREATE TABLE loginKeys (
 	loginKeyId VARCHAR(16) PRIMARY KEY,
 	schoolName text,
-	grade int
+	grade text
 );
 
 CREATE TABLE sessions (
@@ -94,7 +94,8 @@ CREATE TABLE suggestionsAndRankings (
 	REFERENCES articles(articleId)
 );
 
-INSERT INTO loginKeys (loginKeyId, schoolName, grade) VALUES ('ABCDEFGHIJKLMNOP', 'NTNU', 1);
+/*
+INSERT INTO loginKeys (loginKeyId, schoolName, grade) VALUES ('ABCDEFGHIJKLMNOP', 'NTNU', '1. Trinn');
 
 INSERT INTO articles (title, html) VALUES
 ('fjellrev', '<p><strong>fjellrev</strong></p><p>er et lite <a href="https://snl.no/rovpattedyr">rovpattedyr</a> i <a href="https://snl.no/ hundefamilien">hundefamilien</a> som har sin naturlige utbredelse i Nord-Amerika, Europa og Russland. </p><p>Som voksen er den ca. 60 cm lang og veier rundt 3,5 kilo. </p><p>Arten er en jeger som lever av små <a href = "https://snl.no/varmblodige_dyr">varmblodige dyr</a> og <a href="https://snl.no/virvell%C3%B8se_dyr">virvelløse dyr</a> (invertebrater) den fanger på bakken. </p><p>Den <a href="https://snl.no/formering_-_biologi">formerer</a> seg én gang i året og får rundt åtte unger i hvert kull. <a href="https://snl.no/drektighet">Drektighetstiden</a> varer i ca. 52 dager. Ungene blir diet av mora i om lag sju uker etter fødselen og blir <a href="https://snl.no/kjønnsmodenhet">kjønnsmodne</a> i løpet av 43 uker. </p><p>Den lever vanligvis til den er rundt 15 år gammel. </p>'),
@@ -107,4 +108,4 @@ INSERT INTO loginKeyOnArticle (loginKeyId, articleId, articleNumber) VALUES
 	('ABCDEFGHIJKLMNOP', (SELECT articleId FROM ARTICLES LIMIT 1 OFFSET 1) , 1),
 	('ABCDEFGHIJKLMNOP', (SELECT articleId FROM ARTICLES LIMIT 1 OFFSET 2), 2),
 	('ABCDEFGHIJKLMNOP', (SELECT articleId FROM ARTICLES LIMIT 1 OFFSET 3), 3)
-
+ */
