@@ -7,6 +7,7 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import {exec} from "child_process";
 import { createHash } from "crypto";
+import axios from "axios";
 
 const port = process.env.PORT || 15151;
 const app = express();
@@ -311,6 +312,10 @@ app.use((req, res, next) => {
     next();
 });
 
+app.get("/api/admin/crash", (req, res) => {
+    throw new Error("Crash");
+});
+
 app.post("/api/admin/controlpanel", async (req, res) => {
     if (typeof req.body.password !== "string" || md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
@@ -428,8 +433,17 @@ app.get("/api/admin/notes/:article", async (req, res) => {
 });
  */
 
+const webhook_url = fs.readFileSync("webhook.txt", "utf8").trim();
+
+async function debugMessage(message: string) {
+    await axios.post(webhook_url, {
+        content: message
+    });
+}
+
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Get the whole error as a string
+    debugMessage("```" + err.stack.toString() + "```").then(() => {});
     console.log(err.stack.toString());
     res.status(500).send("Internal server error");
 });

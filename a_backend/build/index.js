@@ -22,15 +22,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -44,6 +35,7 @@ const crypto = __importStar(require("crypto"));
 const fs = __importStar(require("fs"));
 const child_process_1 = require("child_process");
 const crypto_1 = require("crypto");
+const axios_1 = __importDefault(require("axios"));
 const port = process.env.PORT || 15151;
 const app = (0, express_1.default)();
 const db = JSON.parse(fs.readFileSync(__dirname + "/../db.json", "utf8"));
@@ -56,15 +48,12 @@ const pool = new pg_1.default.Pool({
 });
 const md5 = (content) => (0, crypto_1.createHash)("md5").update(Buffer.from(content, "utf-8")).digest("hex");
 const admin_password = "0d96635dbb24b52d0a791775b4130571";
-function emergencyReset() {
-    return __awaiter(this, void 0, void 0, function* () {
-        (0, child_process_1.exec)("sudo systemctl restart backend.service");
-    });
+async function emergencyReset() {
+    (0, child_process_1.exec)("sudo systemctl restart backend.service");
 }
-function getState(sessionId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const articles = yield pool.query(`
+async function getState(sessionId) {
+    try {
+        const articles = await pool.query(`
             SELECT
                 articles.articleId as id, regexp_replace(articles.title, ' \\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
             FROM loginKeyOnArticle
@@ -77,41 +66,40 @@ function getState(sessionId) {
                                              WHERE sessionId = $1)
             ORDER BY articleNumber LIMIT 1
         `, [sessionId]);
-            if (articles.rows.length === 0) {
-                const suggestions = yield pool.query(`SELECT count(*) FROM suggestionsAndRankings WHERE sessionId = $1`, [sessionId]);
-                if (parseInt(suggestions.rows[0].count) === 0) {
-                    const session = yield pool.query("SELECT count(*) FROM sessions WHERE sessionId = $1", [sessionId]);
-                    if (parseInt(session.rows[0].count) === 0) {
-                        return null;
-                    }
-                    else {
-                        const reviewedArticles = yield getReviewedArticles(sessionId);
-                        return {
-                            state: "suggest",
-                            articlesToRank: reviewedArticles
-                        };
-                    }
+        if (articles.rows.length === 0) {
+            const suggestions = await pool.query(`SELECT count(*) FROM suggestionsAndRankings WHERE sessionId = $1`, [sessionId]);
+            if (parseInt(suggestions.rows[0].count) === 0) {
+                const session = await pool.query("SELECT count(*) FROM sessions WHERE sessionId = $1", [sessionId]);
+                if (parseInt(session.rows[0].count) === 0) {
+                    return null;
                 }
                 else {
+                    const reviewedArticles = await getReviewedArticles(sessionId);
                     return {
-                        state: "thankyou"
+                        state: "suggest",
+                        articlesToRank: reviewedArticles
                     };
                 }
             }
-            return {
-                state: "read",
-                article: {
-                    title: articles.rows[0].title,
-                    html: articles.rows[0].html,
-                    id: articles.rows[0].id,
-                    number: articles.rows[0].articlenumber
-                }
-            };
+            else {
+                return {
+                    state: "thankyou"
+                };
+            }
         }
-        catch (e) {
-            return null;
-        }
-    });
+        return {
+            state: "read",
+            article: {
+                title: articles.rows[0].title,
+                html: articles.rows[0].html,
+                id: articles.rows[0].id,
+                number: articles.rows[0].articlenumber
+            }
+        };
+    }
+    catch (e) {
+        return null;
+    }
 }
 function isInvalidForm(form) {
     if (typeof form !== "object")
@@ -162,23 +150,20 @@ function isInvalidForm(form) {
     }
     return null;
 }
-function getSchoolStats() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const result = yield pool.query(`
+async function getSchoolStats() {
+    const result = await pool.query(`
         SELECT schoolName, grade, count(*) AS count
         FROM sessions
         JOIN loginKeys USING (loginKeyId)
         GROUP BY schoolName, grade`);
-        return result.rows.map(row => ({
-            schoolName: row.schoolname,
-            grade: row.grade,
-            count: parseInt(row.count)
-        }));
-    });
+    return result.rows.map(row => ({
+        schoolName: row.schoolname,
+        grade: row.grade,
+        count: parseInt(row.count)
+    }));
 }
-function getControlPanelStats() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const result = yield pool.query(`
+async function getControlPanelStats() {
+    const result = await pool.query(`
         SELECT
             (SELECT count(*) FROM sessions) AS sessions,
             (SELECT count(*) FROM articles) AS articles,
@@ -186,57 +171,53 @@ function getControlPanelStats() {
             (SELECT count(*) FROM reviewNotes) AS reviewNotes,
             (SELECT count(*) FROM suggestionsAndRankings) AS suggestionsAndRankings
     `);
-        return {
-            sessions: parseInt(result.rows[0].sessions),
-            articles: parseInt(result.rows[0].articles),
-            reviews: parseInt(result.rows[0].reviews),
-            reviewNotes: parseInt(result.rows[0].reviewnotes),
-            suggestionsAndRankings: parseInt(result.rows[0].suggestionsandrankings)
-        };
-    });
+    return {
+        sessions: parseInt(result.rows[0].sessions),
+        articles: parseInt(result.rows[0].articles),
+        reviews: parseInt(result.rows[0].reviews),
+        reviewNotes: parseInt(result.rows[0].reviewnotes),
+        suggestionsAndRankings: parseInt(result.rows[0].suggestionsandrankings)
+    };
 }
-function submitReview(form, articleId, sessionId) {
+async function submitReview(form, articleId, sessionId) {
     var _a, _b, _c, _d, _e;
-    return __awaiter(this, void 0, void 0, function* () {
-        const client = yield pool.connect();
-        try {
-            yield client.query("BEGIN");
-            const result = yield client.query(`
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        const result = await client.query(`
             INSERT INTO reviews (articleId, sessionId, preKnowledge, surveyRating, surveyDifficulty, surveySuitableAge, surveyLearnedSomething)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING reviewId;
         `, [articleId, sessionId, form.pre_knowledge, (_a = form.survey) === null || _a === void 0 ? void 0 : _a.rating, (_b = form.survey) === null || _b === void 0 ? void 0 : _b.difficulty, (_c = form.survey) === null || _c === void 0 ? void 0 : _c.suitable_age, (_d = form.survey) === null || _d === void 0 ? void 0 : _d.learned_something]);
-            const reviewId = result.rows[0].reviewid;
-            for (const note of form.article_notes) {
-                yield client.query(`
+        const reviewId = result.rows[0].reviewid;
+        for (const note of form.article_notes) {
+            await client.query(`
                 INSERT INTO reviewNotes (reviewId, type, index, text, reason)
                 VALUES ($1, $2, $3, $4, $5);
             `, [reviewId, note.type, note.index, note.text, note.reason]);
-            }
-            if ((_e = form.survey) === null || _e === void 0 ? void 0 : _e.skip) {
-                if (!(yield skipReviews(sessionId, client))) {
-                    throw new Error("Failed to skip reviews");
-                }
-            }
-            yield client.query("COMMIT");
         }
-        catch (e) {
-            yield client.query("ROLLBACK");
-            return false;
-        }
-        finally {
-            try {
-                client.release();
+        if ((_e = form.survey) === null || _e === void 0 ? void 0 : _e.skip) {
+            if (!await skipReviews(sessionId, client)) {
+                throw new Error("Failed to skip reviews");
             }
-            catch (e) { }
         }
-        return true;
-    });
-}
-function skipReviews(sessionId, client) {
-    return __awaiter(this, void 0, void 0, function* () {
+        await client.query("COMMIT");
+    }
+    catch (e) {
+        await client.query("ROLLBACK");
+        return false;
+    }
+    finally {
         try {
-            yield client.query(`
+            client.release();
+        }
+        catch (e) { }
+    }
+    return true;
+}
+async function skipReviews(sessionId, client) {
+    try {
+        await client.query(`
             INSERT INTO reviews
                 (articleId, sessionId, surveyRating, surveySuitableAge, surveyLearnedSomething, surveyDifficulty, preknowledge, skipped)
                 SELECT
@@ -256,16 +237,14 @@ function skipReviews(sessionId, client) {
                     SELECT articleId FROM reviews WHERE sessionId = $3
                 )
         `, [sessionId, sessionId, sessionId]);
-            return true;
-        }
-        catch (e) {
-            return false;
-        }
-    });
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
 }
-function getReviewedArticles(sessionId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const result = yield pool.query(`
+async function getReviewedArticles(sessionId) {
+    const result = await pool.query(`
         SELECT regexp_replace(title, ' \\(NN\\)', '') as title, articles.articleId, loginKeyOnArticle.articleNumber FROM loginKeyOnArticle
         INNER JOIN articles ON articles.articleId = loginKeyOnArticle.articleId
         WHERE loginKeyId = (
@@ -278,84 +257,75 @@ function getReviewedArticles(sessionId) {
         )
         ORDER BY articleNumber
     `, [sessionId, sessionId]);
-        return result.rows.map(row => ({
-            title: row.title,
-            articleId: row.articleid,
-            articleNumber: row.articlenumber
-        }));
-    });
+    return result.rows.map(row => ({
+        title: row.title,
+        articleId: row.articleid,
+        articleNumber: row.articlenumber
+    }));
 }
-function createSession(loginKey) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const sessionId = crypto.randomBytes(32).toString("hex");
-        try {
-            yield pool.query(`
+async function createSession(loginKey) {
+    const sessionId = crypto.randomBytes(32).toString("hex");
+    try {
+        await pool.query(`
             INSERT INTO sessions (sessionId, loginKeyId)
             VALUES ($1, $2);
         `, [sessionId, loginKey]);
-        }
-        catch (e) {
-            return null;
-        }
-        return sessionId;
-    });
+    }
+    catch (e) {
+        return null;
+    }
+    return sessionId;
 }
-function getArticleNotes(article) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const result = yield pool.query(`
+async function getArticleNotes(article) {
+    const result = await pool.query(`
         SELECT index, reason, type FROM reviewNotes
         INNER JOIN reviews ON reviews.reviewId = reviewNotes.reviewId
         WHERE reviews.articleId = $1
     `, [article]);
-        return result.rows.map(row => ({
-            index: row.index,
-            reason: row.reason,
-            type: row.type
-        }));
-    });
+    return result.rows.map(row => ({
+        index: row.index,
+        reason: row.reason,
+        type: row.type
+    }));
 }
-function createLoginKey(schoolName, grade, articles) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const loginKey = crypto.randomBytes(8).toString("hex");
-        const client = yield pool.connect();
-        try {
-            yield client.query("BEGIN");
-            yield client.query(`
+async function createLoginKey(schoolName, grade, articles) {
+    const loginKey = crypto.randomBytes(8).toString("hex");
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        await client.query(`
             INSERT INTO loginKeys (loginKey, schoolName, grade)
             VALUES ($1, $2, $3);
         `, [loginKey, schoolName, grade]);
-            yield client.query(`
+        await client.query(`
             INSERT INTO loginKeyOnArticle (loginKeyId, articleId, articleNumber)
             VALUES ($1, $2, $3), ($4, $5, $6), ($7, $8, $9);
         `, [loginKey, articles[0], 1, loginKey, articles[1], 2, loginKey, articles[2], 3]);
-            yield client.query("COMMIT");
-        }
-        catch (e) {
-            yield client.query("ROLLBACK");
-            return false;
-        }
-        finally {
-            try {
-                client.release();
-            }
-            catch (e) { }
-        }
-        return true;
-    });
-}
-function submitSuggestionsAndRankings(sessionId, suggestion, rankings) {
-    return __awaiter(this, void 0, void 0, function* () {
+        await client.query("COMMIT");
+    }
+    catch (e) {
+        await client.query("ROLLBACK");
+        return false;
+    }
+    finally {
         try {
-            yield pool.query(`
+            client.release();
+        }
+        catch (e) { }
+    }
+    return true;
+}
+async function submitSuggestionsAndRankings(sessionId, suggestion, rankings) {
+    try {
+        await pool.query(`
             INSERT INTO suggestionsAndRankings (sessionId, suggestion, likedBestArticleId, easiestArticleId, hardestArticleId)
             VALUES ($1, $2, $3, $4, $5);
         `, [sessionId, suggestion, rankings.likedBest, rankings.easiest, rankings.hardest]);
-        }
-        catch (e) {
-            return false;
-        }
-        return true;
-    });
+    }
+    catch (e) {
+        return false;
+    }
+    return true;
 }
 app.use((0, cors_1.default)({
     origin: "http://localhost:3000",
@@ -369,33 +339,36 @@ app.use((req, res, next) => {
     res.on("finish", () => console.log(`${req.method} ${req.url} -> ${res.statusCode}`));
     next();
 });
-app.post("/api/admin/controlpanel", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get("/api/admin/crash", (req, res) => {
+    throw new Error("Crash");
+});
+app.post("/api/admin/controlpanel", async (req, res) => {
     if (typeof req.body.password !== "string" || md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
-    const state = yield getControlPanelStats();
-    const schoolStats = yield getSchoolStats();
+    const state = await getControlPanelStats();
+    const schoolStats = await getSchoolStats();
     res.status(200).json({ state, schoolStats });
-}));
-app.post("/api/admin/emergencyreset", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+app.post("/api/admin/emergencyreset", async (req, res) => {
     if (md5(req.body.password) !== admin_password)
         return res.status(403).send("Invalid token");
-    yield emergencyReset();
+    await emergencyReset();
     res.status(200).send("OK");
-}));
-app.post("/api/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+app.post("/api/login", async (req, res) => {
     const code = req.body.code;
     if (!code) {
         res.status(400).send("Missing code");
         return;
     }
-    const session = yield createSession(code);
+    const session = await createSession(code);
     if (session === null) {
         res.status(401).send("Invalid code");
         return;
     }
     res.cookie("session", session, { httpOnly: true });
     res.status(200).send("OK");
-}));
+});
 app.use((req, res, next) => {
     const sessionId = req.cookies.session;
     if (!sessionId) {
@@ -405,23 +378,23 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.get("/api/reviewed", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const reviewed = yield getReviewedArticles(req.cookies.session);
+app.get("/api/reviewed", async (req, res) => {
+    const reviewed = await getReviewedArticles(req.cookies.session);
     res.json(reviewed);
-}));
-app.get("/api/state", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+app.get("/api/state", async (req, res) => {
     console.log("wow");
-    const state = yield getState(req.cookies.session);
+    const state = await getState(req.cookies.session);
     if (state === null) {
         res.status(401).send("Invalid session");
         return;
     }
     res.json(state);
-}));
-app.post("/api/state", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+app.post("/api/state", async (req, res) => {
     var _a;
     const sessionId = req.cookies.session;
-    const state = yield getState(sessionId);
+    const state = await getState(sessionId);
     if (state === null) {
         res.status(401).send("Invalid session");
         return;
@@ -431,8 +404,8 @@ app.post("/api/state", (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(400).send(`Invalid review: ${invalid_reason}`);
         return;
     }
-    if (yield submitReview(req.body, (_a = state.article) === null || _a === void 0 ? void 0 : _a.id, sessionId)) {
-        const state = yield getState(sessionId);
+    if (await submitReview(req.body, (_a = state.article) === null || _a === void 0 ? void 0 : _a.id, sessionId)) {
+        const state = await getState(sessionId);
         if (state === null) {
             res.status(500).send("Internal server error");
         }
@@ -443,8 +416,8 @@ app.post("/api/state", (req, res) => __awaiter(void 0, void 0, void 0, function*
     else {
         res.status(400).send("Bad request");
     }
-}));
-app.post("/api/suggest", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+app.post("/api/suggest", async (req, res) => {
     const sessionId = req.cookies.session;
     if (typeof req.body.suggestions !== "string") {
         res.status(400).send("Missing suggestions");
@@ -456,7 +429,7 @@ app.post("/api/suggest", (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     let result;
     try {
-        result = yield submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings);
+        result = await submitSuggestionsAndRankings(sessionId, req.body.suggestions, req.body.rankings);
     }
     catch (e) {
         res.status(400);
@@ -469,7 +442,7 @@ app.post("/api/suggest", (req, res) => __awaiter(void 0, void 0, void 0, functio
     else {
         res.status(500).send("Internal server error");
     }
-}));
+});
 /*
 app.get("/api/admin/notes/:article", async (req, res) => {
     const article = req.params.article;
@@ -481,8 +454,15 @@ app.get("/api/admin/notes/:article", async (req, res) => {
     res.status(200).json(notes);
 });
  */
+const webhook_url = fs.readFileSync("webhook.txt", "utf8").trim();
+async function debugMessage(message) {
+    await axios_1.default.post(webhook_url, {
+        content: message
+    });
+}
 app.use((err, req, res, next) => {
     // Get the whole error as a string
+    debugMessage("```" + err.stack.toString() + "```").then(() => { });
     console.log(err.stack.toString());
     res.status(500).send("Internal server error");
 });
