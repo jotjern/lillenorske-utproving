@@ -8,6 +8,7 @@ import SuggestionPage, {PageToRank} from "../../templates/SuggestAndRankPage";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ThanksPage from "../../templates/ThanksPage";
 import LoadingPage from "../../templates/LoadingPage";
+import ArticlesDebugPage from "../../templates/ArticlesDebugPage";
 
 interface ImportMetaEnv {
     VITE_API_URL: string;
@@ -30,6 +31,8 @@ interface Article {
 function App() {
     if (window.location.pathname.startsWith("/controlpanel"))
         return <ControlPanel/>
+    if (window.location.pathname.startsWith("/articles"))
+        return <ArticlesDebugPage/>
     const [article, setArticle] = useState<Article | null>(null);
     const [form, setForm] = useState<Form>({
         pre_knowledge: null,
