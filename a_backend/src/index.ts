@@ -266,7 +266,7 @@ async function getArticleNotes(article: string) {
 
 async function getNthArticle(n: number) {
     const result = await pool.query(`
-        SELECT articleId, html, title FROM articles ORDER BY title LIMIT 1 OFFSET $1`, [n]);
+        SELECT articleId, html, regexp_replace(articles.title, ' \\(NN\\)', '') AS title FROM articles ORDER BY title LIMIT 1 OFFSET $1`, [n]);
     return {
         articleId: result.rows[0].articleid,
         html: result.rows[0].html,
