@@ -46,7 +46,7 @@ export default (props: SurveyPageProps) => {
                 ])}
                 onChoice={choice => setDifficulty(choice as Difficulty)}
                 selectedChoice={difficulty ?? undefined}/>
-            <p>Hvem passer teksten for?</p>
+            <p>Hvem passer teksten best for?</p>
             <Choice
                 choices={new Map([
                     ["Småbarn", "small_children"],
