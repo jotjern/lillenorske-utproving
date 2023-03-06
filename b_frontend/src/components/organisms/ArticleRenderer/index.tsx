@@ -4,7 +4,8 @@ import "./index.css";
 interface ArticleRendererProps {
     article: {html: string, title: string};
     onElementClicked?: ({type, index}: {type: "word" | "element", index: number, text: string}) => void;
-    wordColors?: Map<number, string>;
+    wordColorMap?: Map<number, string>;
+    elementColorMap?: Map<number, string>;
 }
 
 function is_word(word: string) {
@@ -86,9 +87,11 @@ export default (props: ArticleRendererProps) => {
         let words: HTMLSpanElement[] = [];
         let segments: Element[] = [];
 
-        article.querySelectorAll("*:not(div)").forEach(elem => {
+        article.querySelectorAll("*:not(div)").forEach((elem, i) => {
             words = words.concat(separate_words(elem))
             segments.push(elem);
+            if (props.elementColorMap && props.elementColorMap.has(i))
+                elem.setAttribute("style", `background-color: ${props.elementColorMap.get(i)}`);
             elem.addEventListener("click", e => {
                 if (e.target !== elem) return;
                 if (props.onElementClicked)
@@ -98,8 +101,8 @@ export default (props: ArticleRendererProps) => {
 
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
-            if (props.wordColors && props.wordColors.has(i))
-                word.style.backgroundColor = props.wordColors.get(i) || "";
+            if (props.wordColorMap && props.wordColorMap.has(i))
+                word.setAttribute("style", `background-color: ${props.wordColorMap.get(i)}`);
             word.addEventListener("click", () => {
                 if (props.onElementClicked)
                     props.onElementClicked({text: word.textContent || "", type: "word", index: words.indexOf(word)});
