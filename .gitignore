@@ -17,4 +17,4 @@ TODOs.md
 .eslintcache
 a_backend/db.json
 a_backend/build/*
-a_backend/webhook.txt
+*/webhook.txt
