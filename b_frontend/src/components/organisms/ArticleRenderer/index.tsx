@@ -59,6 +59,8 @@ function separate_words(element: Element): HTMLSpanElement[] {
 export default (props: ArticleRendererProps) => {
     const id = Math.random().toString(36).substring(2, 9);
 
+    console.log(props);
+
     useEffect(() => {
         const article = document.getElementById(id);
         if (article === null) return;
@@ -101,6 +103,7 @@ export default (props: ArticleRendererProps) => {
 
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
+            console.log(props.wordColorMap?.get(i));
             if (props.wordColorMap && props.wordColorMap.has(i))
                 word.setAttribute("style", `background-color: ${props.wordColorMap.get(i)}`);
             word.addEventListener("click", () => {
@@ -108,7 +111,7 @@ export default (props: ArticleRendererProps) => {
                     props.onElementClicked({text: word.textContent || "", type: "word", index: words.indexOf(word)});
             });
         }
-    }, []);
+    }, [props.wordColorMap, props.elementColorMap]);
 
     return (
         <div
