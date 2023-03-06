@@ -30,6 +30,7 @@ async function emergencyReset() {
 
 async function getState(sessionId: string) {
     try {
+        console.log("Querying for articles...");
         const articles = await pool.query(`
             SELECT
                 articles.articleId as id, regexp_replace(articles.title, ' \\(NN\\)', '') AS title, articles.html AS html, loginKeyOnArticle.articleNumber AS articleNumber
@@ -41,8 +42,10 @@ async function getState(sessionId: string) {
               AND articles.articleId NOT IN (SELECT articleId
                                              FROM reviews
                                              WHERE sessionId = $1)
-            ORDER BY articleNumber LIMIT 1
+            ORDER BY articleNumber LIMIT 1;
         `, [sessionId]);
+
+        console.log(`Amount of articles: ${articles.rows.length}`);
 
         if (articles.rows.length === 0) {
             const suggestions = await pool.query(
@@ -249,15 +252,26 @@ async function createSession(loginKey: string) {
 
 async function getArticleNotes(article: string) {
     const result = await pool.query(`
-        SELECT index, reason, type FROM reviewNotes
+        SELECT index, text, reason, type FROM reviewNotes
         INNER JOIN reviews ON reviews.reviewId = reviewNotes.reviewId
         WHERE reviews.articleId = $1
     `, [article]);
     return result.rows.map(row => ({
         index: row.index,
         reason: row.reason,
-        type: row.type
+        type: row.type,
+        text: row.text
     }));
+}
+
+async function getNthArticle(n: number) {
+    const result = await pool.query(`
+        SELECT articleId, html, title FROM articles ORDER BY title LIMIT 1 OFFSET $1`, [n]);
+    return {
+        articleId: result.rows[0].articleid,
+        html: result.rows[0].html,
+        title: result.rows[0].title
+    };
 }
 
 async function createLoginKey(schoolName: string, grade: number, articles: number[]) {
@@ -329,6 +343,20 @@ app.post("/api/admin/emergencyreset", async (req, res) => {
         return res.status(403).send("Invalid token");
     await emergencyReset();
     res.status(200).send("OK");
+});
+
+app.get("/api/admin/articles/:articleNumber/notes", async (req, res) => {
+    let article;
+    try {
+        article = await getNthArticle(parseInt(req.params.articleNumber));
+    } catch (e) {
+        res.status(400).send("Invalid article number");
+        return;
+    }
+    const notes = await getArticleNotes(article.articleId);
+    res.status(200).json({
+        article, notes
+    });
 });
 
 app.post("/api/login", async (req, res) => {
