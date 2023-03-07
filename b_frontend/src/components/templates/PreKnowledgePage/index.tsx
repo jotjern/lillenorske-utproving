@@ -21,8 +21,7 @@ export default (props: PreKnowledgePageProps) => {
             {
                 props.article.number === 1 &&
                 <p>
-                    I spørsmålene du skal svare på finnes det ikke riktige eller
-                    feil svar. Det er din vurdering som er viktig for oss.
+                    Din vurdering er viktig for oss. Det finnes ingen riktige eller gale svar her
                 </p>
             }
             {
@@ -30,7 +29,7 @@ export default (props: PreKnowledgePageProps) => {
                     <p>Nå skal du få lese og vurdere en tekst fra Lille norske leksikon om {props.article.title}.</p> :
                     <p>Neste tekst handler om {props.article.title}.</p>
             }
-            <p>Hvor mye kan du om {props.article.title}? (kryss av)</p>
+            <p>Hvor mye kan du om {props.article.title}?</p>
             <input type="radio" id="none" name="preKnowledge" value="none" onChange={() => setPreKnowledge("none")}/>
             <label htmlFor="none">Ingenting</label>
             <br/>

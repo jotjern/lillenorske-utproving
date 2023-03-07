@@ -76,6 +76,7 @@ export default (props: SurveyPageProps) => {
                 onChoice={choice => set_learned_something(choice as LearnedSomething)}
                 selectedEmoji={learned_something ?? undefined}/>
 
+            <br/>
             <FakeLink
                 onClick={() => {
                     if (difficulty === null || suitable_age === null || rating === null || learned_something === null) return;
@@ -87,6 +88,7 @@ export default (props: SurveyPageProps) => {
                 Neste
             </FakeLink>
             <br/>
+            <div style={{margin: "8px 0"}}/>
             {
                 props.article.number < 3 && <FakeLink
                     onClick={() => {
