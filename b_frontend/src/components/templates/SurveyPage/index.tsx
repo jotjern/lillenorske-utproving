@@ -50,15 +50,15 @@ export default (props: SurveyPageProps) => {
             <Choice
                 choices={new Map([
                     ["Småbarn", "small_children"],
-                    ["8-9 åringer", "8-9"],
-                    ["10-11 åringer", "10-11"],
-                    ["12-13 åringer", "12-13"],
+                    ["8–9-åringer", "8-9"],
+                    ["10–11-åringer", "10-11"],
+                    ["12–13-åringer", "12-13"],
                     ["Voksne", "adult"]
                 ])}
                 onChoice={choice => setSuitable_age(choice as SuitableAge)}
                 selectedChoice={suitable_age ?? undefined}/>
 
-            <p>Hva syntes du om teksten?</p>
+            <p>Hva synes du om teksten?</p>
             <EmojiChoice
                 emojis={new Map([
                     ["😡", "bad"],
