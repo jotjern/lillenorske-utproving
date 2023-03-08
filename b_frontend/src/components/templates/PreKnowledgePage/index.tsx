@@ -21,7 +21,7 @@ export default (props: PreKnowledgePageProps) => {
             {
                 props.article.number === 1 &&
                 <p>
-                    Din vurdering er viktig for oss. Det finnes ingen riktige eller gale svar her
+                    Din vurdering er viktig for oss. Det finnes ingen riktige eller gale svar her.
                 </p>
             }
             {
