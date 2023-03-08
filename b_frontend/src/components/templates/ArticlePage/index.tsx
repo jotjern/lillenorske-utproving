@@ -21,7 +21,7 @@ export default (props: ArticlePageProps) => {
         if (note.type === "word")
             wordColorMap.set(note.index, "rgba(255,255,0,1)");
         else
-            elementColorMap.set(note.index, "rgba(255,255,0,0.5)");
+            elementColorMap.set(note.index, "rgba(255,255,0,0.2)");
     }
 
     console.log(wordColorMap);
