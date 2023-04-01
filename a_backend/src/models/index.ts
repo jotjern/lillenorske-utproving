@@ -1,4 +1,4 @@
-import {Pool, PoolClient} from "pg";
+import {Pool, PoolClient, QueryResult} from "pg";
 import crypto from "crypto";
 
 
@@ -281,6 +281,120 @@ export default (pool: Pool) => {
                 }
             }
         } catch (e) {
+            return null;
+        }
+    }
+
+    async function getEndStats(): Promise<Map<string, QueryResult<any>> | null> {
+        const queries = new Map<string, string>(Object.entries({
+            mostReportedWords: `
+                SELECT
+                    count(*), articleId, type, index, reason, min(text) as text
+                FROM reviewNotes
+                INNER JOIN
+                    reviews USING (reviewId)
+                WHERE
+                    type = 'word'
+                GROUP BY
+                    (articleId, type, index, reason)
+                ORDER BY
+                    count(*) DESC
+                LIMIT 100
+            `,
+            mostReportedElements: `
+                SELECT
+                    count(*), articleId, type, index, reason, min(text) as text
+                FROM reviewNotes
+                INNER JOIN
+                    reviews USING (reviewId)
+                WHERE
+                    type = 'element'
+                GROUP BY
+                    (articleId, type, index, reason)
+                ORDER BY
+                    count(*) DESC
+                LIMIT 100
+            `,
+            articleRatings: `
+                SELECT articleId, title, likedBestCount, easiestCount, hardestCount FROM articles
+                INNER JOIN (
+                    SELECT
+                        likedBestArticleId, count(likedBestArticleId) as likedBestCount
+                    FROM
+                        suggestionsAndRankings
+                    GROUP BY
+                        likedBestArticleId
+                    ORDER BY
+                        count(likedBestArticleId) DESC
+                ) likedBest ON likedBest.likedBestArticleId = articleId
+                INNER JOIN (
+                    SELECT
+                        easiestArticleId, count(easiestArticleId) as easiestCount
+                    FROM
+                        suggestionsAndRankings
+                    GROUP BY
+                        easiestArticleId
+                    ORDER BY
+                        count(easiestArticleId) DESC
+                ) easiest ON easiest.easiestArticleId = articleId
+                INNER JOIN (
+                    SELECT
+                        hardestArticleId, count(hardestArticleId) as hardestCount
+                    FROM
+                        suggestionsAndRankings
+                    GROUP BY
+                        hardestArticleId
+                    ORDER BY
+                        count(hardestArticleId) DESC
+                ) hardest ON hardest.hardestArticleId = articleId;
+            `,
+            aggregatedNotes: `
+                SELECT
+                    count(*), articleId, type, index, reason, min(text) as text FROM reviewNotes
+                INNER JOIN
+                    reviews USING (reviewId)
+                GROUP BY
+                    (articleId, type, index, reason)
+                ORDER BY
+                    count(*) DESC
+                LIMIT 100
+            `,
+            noteCategoryCounts: `
+                SELECT count(*), reason, type FROM reviewNotes GROUP BY (reason, type);
+            `,
+            popularSuggestions: `
+                SELECT
+                    TRIM(LOWER(suggestion)) AS suggestion, count(*)
+                FROM
+                    suggestionsAndRankings
+                WHERE
+                    TRIM(LOWER(suggestion)) != ''
+                GROUP BY
+                    TRIM(LOWER(suggestion))
+                ORDER BY
+                    count(*) DESC
+                LIMIT 10;
+            `
+        }));
+
+        const client = await pool.connect();
+        try {
+            // Do all queries in parallel
+            const results = await Promise.all(Object.keys(queries).map(async (key) => {
+                const query = queries.get(key);
+                if (query === undefined) {
+                    throw new Error("Query not found");
+                }
+                const result = await client.query(query);
+                return { [key]: result.rows };
+            }));
+
+            // Merge results into one object
+            return results.reduce((acc, cur) => {
+                return Object.assign(acc, cur);
+            }, new Map<string, any>());
+        } catch (e) {
+            console.error(e);
             return null;
         }
     }

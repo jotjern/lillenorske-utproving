@@ -9,12 +9,13 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ThanksPage from "../../templates/ThanksPage";
 import LoadingPage from "../../templates/LoadingPage";
 import ArticlesDebugPage from "../../templates/ArticlesDebugPage";
+import StatsPage from '../../templates/StatsPage';
 
 interface ImportMetaEnv {
     VITE_API_URL: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
+export const API_URL = import.meta.env.VITE_API_URL;
 
 interface Form {
     pre_knowledge: PreKnowledge | null;
@@ -33,6 +34,9 @@ function App() {
         return <ControlPanel/>
     if (window.location.pathname.startsWith("/articles"))
         return <ArticlesDebugPage/>
+    if (window.location.pathname.startsWith("/stats")) {
+        return <StatsPage/>;
+    }
     const [article, setArticle] = useState<Article | null>(null);
     const [form, setForm] = useState<Form>({
         pre_knowledge: null,

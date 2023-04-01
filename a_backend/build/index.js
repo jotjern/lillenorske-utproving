@@ -181,6 +181,130 @@ async function getControlPanelStats() {
         suggestionsAndRankings: parseInt(result.rows[0].suggestionsandrankings)
     };
 }
+async function getEndStats() {
+    const queries = new Map(Object.entries({
+        mostReportedWords: `
+            SELECT count(*), type, reason, text as text FROM reviewNotes
+            INNER JOIN reviews USING (reviewId)
+            WHERE type = 'word'
+            GROUP BY (type, reason, text)
+            ORDER BY count(*) DESC
+            LIMIT 100
+        `,
+        mostReportedElements: `
+            SELECT count(*), type, reason, text as text FROM reviewNotes
+            INNER JOIN reviews USING (reviewId)
+            WHERE type = 'element'
+            GROUP BY (type, reason, text)
+            ORDER BY count(*) DESC
+            LIMIT 100
+        `,
+        mostReportedSpecificWords: `
+                SELECT
+                    count(*), articleId, type, index, reason, min(text) as text
+                FROM reviewNotes
+                INNER JOIN
+                    reviews USING (reviewId)
+                WHERE
+                    type = 'word'
+                GROUP BY
+                    (articleId, type, index, reason)
+                ORDER BY
+                    count(*) DESC
+                LIMIT 100
+            `,
+        mostReportedSpecificElements: `
+                SELECT
+                    count(*), articleId, type, index, reason, min(text) as text
+                FROM reviewNotes
+                INNER JOIN
+                    reviews USING (reviewId)
+                WHERE
+                    type = 'element'
+                GROUP BY
+                    (articleId, type, index, reason)
+                ORDER BY
+                    count(*) DESC
+                LIMIT 100
+            `,
+        articleRatings: `
+                SELECT articleId, title, likedBestCount, easiestCount, hardestCount FROM articles
+                INNER JOIN (
+                    SELECT
+                        likedBestArticleId, count(likedBestArticleId) as likedBestCount
+                    FROM
+                        suggestionsAndRankings
+                    GROUP BY
+                        likedBestArticleId
+                    ORDER BY
+                        count(likedBestArticleId) DESC
+                ) likedBest ON likedBest.likedBestArticleId = articleId
+                INNER JOIN (
+                    SELECT
+                        easiestArticleId, count(easiestArticleId) as easiestCount
+                    FROM
+                        suggestionsAndRankings
+                    GROUP BY
+                        easiestArticleId
+                    ORDER BY
+                        count(easiestArticleId) DESC
+                ) easiest ON easiest.easiestArticleId = articleId
+                INNER JOIN (
+                    SELECT
+                        hardestArticleId, count(hardestArticleId) as hardestCount
+                    FROM
+                        suggestionsAndRankings
+                    GROUP BY
+                        hardestArticleId
+                    ORDER BY
+                        count(hardestArticleId) DESC
+                ) hardest ON hardest.hardestArticleId = articleId;
+            `,
+        aggregatedNotes: `
+                SELECT
+                    count(*), articleId, type, index, reason, min(text) as text FROM reviewNotes
+                INNER JOIN
+                    reviews USING (reviewId)
+                GROUP BY
+                    (articleId, type, index, reason)
+                ORDER BY
+                    count(*) DESC
+                LIMIT 100
+            `,
+        noteCategoryCounts: `
+                SELECT count(*), reason, type FROM reviewNotes GROUP BY (reason, type);
+            `,
+        popularSuggestions: `
+                SELECT
+                    TRIM(LOWER(suggestion)) AS suggestion, count(*)
+                FROM
+                    suggestionsAndRankings
+                WHERE
+                    TRIM(LOWER(suggestion)) != ''
+                GROUP BY
+                    TRIM(LOWER(suggestion))
+                ORDER BY
+                    count(*) DESC
+                LIMIT 10;
+            `
+    }));
+    const client = await pool.connect();
+    try {
+        const ret = new Map();
+        for (const [key, query] of queries.entries()) {
+            ret.set(key, (await client.query(query)).rows);
+        }
+        return ret;
+    }
+    catch (e) {
+        console.log("!!!!");
+        console.error(e);
+        return null;
+    }
+    finally {
+        client.release();
+    }
+}
 async function submitReview(form, articleId, sessionId) {
     var _a, _b, _c, _d, _e;
     const client = await pool.connect();
@@ -380,6 +504,10 @@ app.get("/api/admin/articles/:articleNumber/notes", async (req, res) => {
     res.status(200).json({
         article, notes
     });
+});
+app.get("/api/endstats", async (req, res) => {
+    const stats = await getEndStats();
+    res.json(Object.fromEntries(stats));
 });
 app.post("/api/login", async (req, res) => {
     const code = req.body.code;

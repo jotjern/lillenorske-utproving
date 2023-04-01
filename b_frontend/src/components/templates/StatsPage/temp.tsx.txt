@@ -1,0 +1,107 @@
+/*
+import { useEffect, useState } from "react";
+import { API_URL } from "../../pages/App";
+
+import { Chart } from "chart.js";
+  
+interface Stats {
+    mostReportedWords: {
+        count: string,
+        articleId: number,
+        index: number,
+        reason: "understanding" | "unnecessary" | "good",
+        text: string
+    }[],
+    mostReportedElements: {
+        count: string,
+        articleId: number,
+        index: number,
+        reason: "understanding" | "unnecessary" | "good",
+        text: string
+    }[],
+    articleRatings: {
+        articleId: number,
+        title: string,
+        likedBestCount: string,
+        easiestCount: string,
+        hardestCount: string
+    }[],
+    aggregatedNotes: {
+        count: string,
+        articleId: number,
+        index: number,
+        reason: "understanding" | "unnecessary" | "good",
+        text: string
+    }[],
+    noteCategoryCounts: {
+        count: string,
+        reason: "understanding" | "unnecessary" | "good",
+        type: "word" | "element"
+    }[],
+    popularSuggestions: {
+        suggestion: string,
+        count: string
+    }[]
+}
+
+const options = {
+    animationEnabled: true,
+    theme: "light2",
+    title:{
+        text: "Most Popular Social Networking Sites"
+    },
+    axisX: {
+        title: "Social Network",
+        reversed: true,
+    },
+    axisY: {
+        title: "Monthly Active Users",
+        includeZero: true,
+    },
+    data: [{
+        type: "bar",
+        dataPoints: [
+            { y:  2200000000, label: "Facebook" },
+            { y:  1800000000, label: "YouTube" },
+            { y:  800000000, label: "Instagram" },
+            { y:  563000000, label: "Qzone" },
+            { y:  376000000, label: "Weibo" },
+            { y:  336000000, label: "Twitter" },
+            { y:  330000000, label: "Reddit" }
+        ]
+    }]
+}
+
+export default function StatsPage() {
+    const [stats, setStats] = useState<Stats | null>(null);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const response = await fetch(API_URL + "/endstats");
+            const stats = await response.json();
+            setStats(stats);
+        };
+
+        fetchStats();
+    }, []);
+
+    if (stats === null)
+        return <div>Loading...</div>;
+
+    const data = {
+        labels: ["A", "B", "C"],
+        datasets: {
+            label: "Wow",
+            data: [1, 2, 3],
+            backgroundColor: "red"
+        }
+    }
+
+    return <div>
+        <h1>Stats</h1>
+        <pre>{JSON.stringify(stats, null, 4)}</pre>
+        <CanvasJSChart options={options}/>
+    </div>
+}
+
+*/

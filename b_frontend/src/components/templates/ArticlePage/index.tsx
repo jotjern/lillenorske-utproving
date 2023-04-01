@@ -24,8 +24,6 @@ export default (props: ArticlePageProps) => {
             elementColorMap.set(note.index, "rgba(255,255,0,0.2)");
     }
 
-    console.log(wordColorMap);
-
     const capitalized_title = props.article.title.charAt(0).toUpperCase() + props.article.title.slice(1);
 
     return <>
