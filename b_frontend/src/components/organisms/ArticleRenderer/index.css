@@ -30,3 +30,13 @@
     padding: 0.5em;
     border: 1px solid black;
 }
+
+.info-text {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: white;
+    padding: 0.25em;
+    border: 1px solid black;
+    z-index: 100;
+}

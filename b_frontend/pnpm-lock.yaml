@@ -1,24 +1,6 @@
 lockfileVersion: '6.0'
 
 dependencies:
-  '@types/canvasjs':
-    specifier: ^1.9.8
-    version: 1.9.8
-  '@types/chart.js':
-    specifier: ^2.9.37
-    version: 2.9.37
-  '@types/faker':
-    specifier: ^6.6.9
-    version: 6.6.9
-  canvasjs:
-    specifier: ^1.8.3
-    version: 1.8.3
-  canvasjs-react-charts:
-    specifier: ^1.0.5
-    version: 1.0.5
-  faker:
-    specifier: ^6.6.6
-    version: 6.6.6
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -28,6 +10,9 @@ dependencies:
   react-router-dom:
     specifier: ^6.8.1
     version: 6.10.0(react-dom@18.2.0)(react@18.2.0)
+  react-spinners:
+    specifier: ^0.13.8
+    version: 0.13.8(react-dom@18.2.0)(react@18.2.0)
 
 devDependencies:
   '@types/react':
@@ -517,23 +502,6 @@ packages:
     engines: {node: '>=14'}
     dev: false
 
-  /@types/canvasjs@1.9.8:
-    resolution: {integrity: sha512-+EFzR0V5oB8KrzjitIIEi0oYznRb9ZvxCBpX5XILUesuKcDJSaDKQ9ccC5wf+c998u7pILKojPEqvOSenURJ2A==}
-    dev: false
-
-  /@types/chart.js@2.9.37:
-    resolution: {integrity: sha512-9bosRfHhkXxKYfrw94EmyDQcdjMaQPkU1fH2tDxu8DWXxf1mjzWQAV4laJF51ZbC2ycYwNDvIm1rGez8Bug0vg==}
-    dependencies:
-      moment: 2.29.4
-    dev: false
-
-  /@types/faker@6.6.9:
-    resolution: {integrity: sha512-Y9YYm5L//8ooiiknO++4Gr539zzdI0j3aXnOBjo1Vk+kTvffY10GuE2wn78AFPECwZ5MYGTjiDVw1naLLdDimw==}
-    deprecated: This is a stub types definition. faker provides its own type definitions, so you do not need this installed.
-    dependencies:
-      faker: 6.6.6
-    dev: false
-
   /@types/prop-types@15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
     dev: true
@@ -593,14 +561,6 @@ packages:
   /caniuse-lite@1.0.30001473:
     resolution: {integrity: sha512-ewDad7+D2vlyy+E4UJuVfiBsU69IL+8oVmTuZnH5Q6CIUbxNfI50uVpRHbUPDD6SUaN2o0Lh4DhTrvLG/Tn1yg==}
     dev: true
-
-  /canvasjs-react-charts@1.0.5:
-    resolution: {integrity: sha512-8P3KnAvCqftmqf4O/xG6PlIDcTr0IvzuE4l6ACXIOROKtFmnmUu/xPEeq+0vI9Xvh7zXjzZvRqw0p1uxXr034g==}
-    dev: false
-
-  /canvasjs@1.8.3:
-    resolution: {integrity: sha512-60eUT0VjqRgYqdIQcOkXg0Zptfbl4HefA/O51YEf1m/P0uXvE3icI/1KPrXpY9aVxn8gG/BB8DzVoTGCcyBnYg==}
-    dev: false
 
   /chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -685,10 +645,6 @@ packages:
     engines: {node: '>=0.8.0'}
     dev: true
 
-  /faker@6.6.6:
-    resolution: {integrity: sha512-9tCqYEDHI5RYFQigXFwF1hnCwcWCOJl/hmll0lr5D2Ljjb0o4wphb69wikeJDz5qCEzXCoPvG6ss5SDP6IfOdg==}
-    dev: false
-
   /fsevents@2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -764,10 +720,6 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
 
-  /moment@2.29.4:
-    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
-    dev: false
-
   /ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
     dev: true
@@ -835,6 +787,16 @@ packages:
     dependencies:
       '@remix-run/router': 1.5.0
       react: 18.2.0
+    dev: false
+
+  /react-spinners@0.13.8(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-3e+k56lUkPj0vb5NDXPVFAOkPC//XyhKPJjvcGjyMNPWsBKpplfeyialP74G7H7+It7KzhtET+MvGqbKgAqpZA==}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /react@18.2.0:

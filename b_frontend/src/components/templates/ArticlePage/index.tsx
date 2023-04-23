@@ -35,8 +35,8 @@ export default (props: ArticlePageProps) => {
                 <ArticleRenderer
                     article={props.article}
                     onElementClicked={element => setClickedElement(element)}
-                    wordColorMap={wordColorMap}
-                    elementColorMap={elementColorMap}
+                    wordColor={wordColorMap}
+                    elementColor={elementColorMap}
                 />
                 <button className="fake-link" onClick={() => {
                     if (props.onFinished) props.onFinished(notes);

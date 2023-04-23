@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import {useEffect, useState} from "react";
 import "./index.css";
 
 interface ArticleRendererProps {
     article: {html: string, title: string};
     onElementClicked?: ({type, index}: {type: "word" | "element", index: number, text: string}) => void;
-    wordColorMap?: Map<number, string>;
-    elementColorMap?: Map<number, string>;
+    wordColor?: Map<number, string>;
+    elementColor?: Map<number, string>;
+    wordText?: Map<number, string>;
+    elementText?: Map<number, string>;
 }
 
 function is_word(word: string) {
@@ -57,9 +59,11 @@ function separate_words(element: Element): HTMLSpanElement[] {
 }
 
 export default (props: ArticleRendererProps) => {
-    const id = Math.random().toString(36).substring(2, 9);
+    const [infoText, setInfoText] = useState<[string | null, string | null]>([null, null]);
 
     console.log(props);
+
+    const id = Math.random().toString(36).substring(2, 9);
 
     useEffect(() => {
         const article = document.getElementById(id);
@@ -78,7 +82,6 @@ export default (props: ArticleRendererProps) => {
         });
 
         const first_paragraph = article.querySelector("p");
-        console.log(first_paragraph);
         if (first_paragraph !== null) {
             if (first_paragraph.innerText.startsWith("var ") || first_paragraph.innerText.startsWith("er")) {
                 const capitalized_title = props.article.title.charAt(0).toUpperCase() + props.article.title.slice(1);
@@ -92,30 +95,62 @@ export default (props: ArticleRendererProps) => {
         article.querySelectorAll("*:not(div)").forEach((elem, i) => {
             words = words.concat(separate_words(elem))
             segments.push(elem);
-            if (props.elementColorMap && props.elementColorMap.has(i))
-                elem.setAttribute("style", `background-color: ${props.elementColorMap.get(i)}`);
+            if (props.elementColor && props.elementColor.has(i))
+                elem.setAttribute("style", `background-color: ${props.elementColor.get(i)}`);
             elem.addEventListener("click", e => {
                 if (e.target !== elem) return;
                 if (props.onElementClicked)
                     props.onElementClicked({text: elem.textContent || "", type: "element", index: segments.indexOf(elem)});
             });
+            if (props.elementText !== undefined && props.elementText.has(i)) {
+                const hoverText = props.elementText.get(i) || "";
+                elem.addEventListener("mouseover", e => {
+                    if (e.target !== elem) return;
+                    setInfoText([infoText[0], hoverText]);
+                })
+                elem.addEventListener("mouseout", e => {
+                    if (e.target !== elem || infoText[1] !== hoverText) return;
+                    setInfoText([infoText[0], null]);
+                });
+            }
         });
 
         for (let i = 0; i < words.length; i++) {
             const word = words[i];
-            console.log(props.wordColorMap?.get(i));
-            if (props.wordColorMap && props.wordColorMap.has(i))
-                word.setAttribute("style", `background-color: ${props.wordColorMap.get(i)}`);
+            if (props.wordColor && props.wordColor.has(i))
+                word.setAttribute("style", `background-color: ${props.wordColor.get(i)}`);
+            if (props.wordText && props.wordText.has(i)) {
+                const hoverText = props.wordText.get(i) || "";
+                word.addEventListener("mouseover", e => {
+                    if (e.target !== word) return;
+                    setInfoText([hoverText, infoText[1]]);
+                });
+                word.addEventListener("mouseout", e => {
+                    if (e.target !== word || infoText[0] !== hoverText) return;
+                    setInfoText([null, infoText[1]]);
+                });
+            }
             word.addEventListener("click", () => {
                 if (props.onElementClicked)
                     props.onElementClicked({text: word.textContent || "", type: "word", index: words.indexOf(word)});
             });
         }
-    }, [props.wordColorMap, props.elementColorMap]);
+    }, [props.wordColor, props.elementColor]);
+
+    const selectedInfoText = infoText[0] ?? infoText[1];
 
     return (
-        <div
-            className={"article" + (props.onElementClicked ? " highlightable" : "")}
-            id={id}/>
+        <div>
+            {
+                selectedInfoText && <div className="info-text">
+                    {(selectedInfoText ?? "").split("\n").map((line, index) => (
+                        <div key={index}>{line}</div>
+                    ))}
+                </div>
+            }
+            <div
+                className={"article" + ((props.onElementClicked || props.elementText || props.wordText) ? " highlightable" : "")}
+                id={id}/>
+        </div>
     );
 }
