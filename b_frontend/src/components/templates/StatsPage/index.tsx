@@ -4,6 +4,8 @@ import { API_URL } from "../../pages/App";
 import BarChart from "../../organisms/BarChart";
 import FakeLink from "../../atoms/FakeLink";
 
+import "./index.css";
+
 function reasonText(reason: "understanding" | "unnecessary" | "good") {
     switch (reason) {
         case "understanding":
@@ -52,7 +54,8 @@ interface Stats {
     popularSuggestions: {
         suggestion: string,
         count: string
-    }[]
+    }[];
+    allSuggestions: string[];
 }
 
 export default function StatsPage() {
@@ -71,10 +74,12 @@ export default function StatsPage() {
     if (stats === null)
         return <div>Loading...</div>;
 
-    const popularSuggestionData = stats.popularSuggestions.map(suggestion => ({
-        label: suggestion.suggestion,
-        value: parseInt(suggestion.count)
-    }));
+    const popularSuggestionData = stats.popularSuggestions
+        .slice(0, 10)
+        .map(suggestion => ({
+            label: suggestion.suggestion,
+            value: parseInt(suggestion.count)
+        }));
 
     let noteTypeData = stats.noteCategoryCounts.map(noteType => ({
         label: reasonText(noteType.reason) + (noteType.type === "word" ? " ord" : " avsnitt"),
@@ -160,5 +165,25 @@ export default function StatsPage() {
             color="lime"
             fontScale={0.4}
             />
+        <div className="suggestions-container">
+            <h1>Forslag til artikler</h1>
+            <table className="suggestions-table">
+                <thead>
+                    <tr>
+                        <th>Forslag</th>
+                        <th>Antall</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {stats.popularSuggestions.map(({suggestion, count}) => <tr>
+                        <td>
+                            {suggestion}
+                        </td>
+                        <td>{count}</td>
+                    </tr>)
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 }

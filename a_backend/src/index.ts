@@ -258,7 +258,6 @@ async function getEndStats(): Promise<any> {
                     TRIM(LOWER(suggestion))
                 ORDER BY
                     count(*) DESC
-                LIMIT 10;
             `
     }));
 

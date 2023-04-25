@@ -285,7 +285,6 @@ async function getEndStats() {
                     TRIM(LOWER(suggestion))
                 ORDER BY
                     count(*) DESC
-                LIMIT 10;
             `
     }));
     const client = await pool.connect();

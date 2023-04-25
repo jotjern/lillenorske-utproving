@@ -1,0 +1,21 @@
+.suggestions-container {
+    text-align: center;
+    width: 100%;
+}
+
+.suggestions-table {
+    margin: 0;
+    display: inline-block;
+    text-align: left;
+}
+
+.suggestions-table td, .suggestions-table th {
+    padding: 0.5em;
+    border: 1px solid black;
+    max-width: 600px;
+    overflow-x: scroll;
+}
+
+.suggestions-table {
+    border-collapse: collapse;
+}
