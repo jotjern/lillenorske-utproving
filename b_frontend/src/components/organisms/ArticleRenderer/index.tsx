@@ -61,8 +61,6 @@ function separate_words(element: Element): HTMLSpanElement[] {
 export default (props: ArticleRendererProps) => {
     const [infoText, setInfoText] = useState<[string | null, string | null]>([null, null]);
 
-    console.log(props);
-
     const id = Math.random().toString(36).substring(2, 9);
 
     useEffect(() => {
@@ -109,8 +107,8 @@ export default (props: ArticleRendererProps) => {
                     setInfoText([infoText[0], hoverText]);
                 })
                 elem.addEventListener("mouseout", e => {
-                    if (e.target !== elem || infoText[1] !== hoverText) return;
-                    setInfoText([infoText[0], null]);
+                    if (e.target !== elem) return;
+                    setInfoText([null, null]);
                 });
             }
         });

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { API_URL } from "../../pages/App";
 
 import BarChart from "../../organisms/BarChart";
+import FakeLink from "../../atoms/FakeLink";
 
 function reasonText(reason: "understanding" | "unnecessary" | "good") {
     switch (reason) {
@@ -52,34 +53,6 @@ interface Stats {
         suggestion: string,
         count: string
     }[]
-}
-
-const options = {
-    animationEnabled: true,
-    theme: "light2",
-    title:{
-        text: "Most Popular Social Networking Sites"
-    },
-    axisX: {
-        title: "Social Network",
-        reversed: true,
-    },
-    axisY: {
-        title: "Monthly Active Users",
-        includeZero: true,
-    },
-    data: [{
-        type: "bar",
-        dataPoints: [
-            { y:  2200000000, label: "Facebook" },
-            { y:  1800000000, label: "YouTube" },
-            { y:  800000000, label: "Instagram" },
-            { y:  563000000, label: "Qzone" },
-            { y:  376000000, label: "Weibo" },
-            { y:  336000000, label: "Twitter" },
-            { y:  330000000, label: "Reddit" }
-        ]
-    }]
 }
 
 export default function StatsPage() {
@@ -137,6 +110,10 @@ export default function StatsPage() {
     })).slice(0, 10);
 
     return <div>
+        <FakeLink onClick={() => {
+            window.location.href = "/articles";
+        }}>Artikler</FakeLink>
+        <br/>
         <BarChart
             data={popularSuggestionData}
             size={{width: 400, height: 400}}

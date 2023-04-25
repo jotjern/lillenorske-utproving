@@ -1,5 +1,5 @@
 import ArticleRenderer from "../../organisms/ArticleRenderer";
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import "./index.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -17,82 +17,185 @@ function norwegian_reason(reason: string) {
     }
 }
 
+interface Note {
+    index: number;
+    reason: "understanding" | "unnecessary" | "good";
+    type: "word" | "element";
+    text: string;
+}
+
+const processNotes = (notes: Note[], filter: {understanding: boolean, unnecessary: boolean, good: boolean}, max: number = 1): { indexColors: Map<number, string>; reasonCountStrings: Map<number, string> } => {
+    const indexCount: Map<number, number> = new Map();
+    const indexReasonCount: Map<number, Map<string, number>> = new Map();
+
+    notes.forEach((note) => {
+        if (filter[note.reason])
+            indexCount.set(note.index, (indexCount.get(note.index) || 0) + 1);
+
+        if (!indexReasonCount.has(note.index)) {
+            indexReasonCount.set(note.index, new Map());
+        }
+        const reasonCount = indexReasonCount.get(note.index)!;
+        reasonCount.set(note.reason, (reasonCount.get(note.reason) || 0) + 1);
+    });
+
+    // Normalize index counts
+    const maxCount = Math.max(...Array.from(indexCount.values()));
+    const minCount = Math.min(...Array.from(indexCount.values()));
+    const normalizedIndexCount: Map<number, number> = new Map();
+
+    for (const [index, count] of indexCount.entries()) {
+        normalizedIndexCount.set(index, ((count - minCount) / (maxCount - minCount)));
+    }
+
+    // Generate color based on normalized index count
+    const generateColor = (value: number): string => {
+        const alpha = value * max;
+        return `rgba(255, 0, 0, ${alpha})`;
+    };
+
+    const indexColors: Map<number, string> = new Map();
+
+    for (const [index, value] of normalizedIndexCount.entries()) {
+        indexColors.set(index, generateColor(value));
+    }
+
+    // Create the reason count strings
+    const reasonCountStrings: Map<number, string> = new Map();
+
+    for (const [index, reasonCount] of indexReasonCount.entries()) {
+        reasonCountStrings.set(
+            index,
+            Array.from(reasonCount.entries())
+                .filter(([reason, count]) => count > 0)
+                .sort((a, b) => b[1] - a[1])
+                .map(([reason, count]) => `${norwegian_reason(reason)}: ${count}`)
+                .join('\n')
+        );
+    }
+
+    return {
+        indexColors,
+        reasonCountStrings,
+    };
+};
+
 export default () => {
     const current_page = parseInt((new URLSearchParams(window.location.search)).get("page") ?? "1");
     const [article, setArticle] = React.useState<{
-        article: { title: string, html: string },
-        wordColors: Map<number, string>,
-        elementColors: Map<number, string>,
-        wordText: Map<number, string>,
-        elementText: Map<number, string>
+        article: { title: string; html: string };
+        wordColors: Map<number, string>;
+        elementColors: Map<number, string>;
+        wordText: Map<number, string>;
+        elementText: Map<number, string>;
     } | null>(null);
+    const [filter, setFilter] = React.useState<{ understanding: boolean; unnecessary: boolean; good: boolean }>({
+        understanding: true,
+        unnecessary: true,
+        good: true,
+    });
 
     useEffect(() => {
+        // Don't crash on wrong status
         fetch(API_URL + `/admin/articles/${current_page}/notes`, {
             method: "GET",
-        }).then(response => {
+        }).then((response) => {
             if (response.status === 200) {
-                response.json().then(json => {
-                    let word_heatmap = new Map<number, number>();
-                    let element_heatmap = new Map<number, number>();
+                response.json().then((json) => {
+                    let word_reasons = new Map<string, number>();
+                    let element_reasons = new Map<string, number>();
 
-                    let word_reasons = new Map<number, Map<string, number>>();
-                    let element_reasons = new Map<number, Map<string, number>>();
+                    const notes = json["notes"] as Note[];
+                    const word_notes = notes.filter((note) => note.type === "word");
+                    const element_notes = notes.filter((note) => note.type === "element");
 
-                    for (const note of json["notes"]) {
-                        let heatmap = note.type === "word" ? word_heatmap : element_heatmap;
-                        let reasons = note.type === "word" ? word_reasons : element_reasons;
-                        let count = heatmap.get(note.index) ?? 0;
-                        heatmap.set(note.index, count + 1);
+                    const {
+                        indexColors: wordColors, reasonCountStrings: wordText
+                    } = processNotes(word_notes, filter);
 
-                        let reason_count = reasons.get(note.index) ?? new Map<string, number>();
-                        reason_count.set(note.reason, (reason_count.get(note.reason) ?? 0) + 1);
-                        reasons.set(note.index, reason_count);
-                    }
+                    const {
+                        indexColors: elementColors, reasonCountStrings: elementText
+                    } = processNotes(element_notes, filter, 0.5);
 
-                    let wordColors = new Map<number, string>();
-                    let elementColors = new Map<number, string>();
-                    let word_max = Math.max(...Array.from(word_heatmap.values()));
-                    let element_max = Math.max(...Array.from(element_heatmap.values()));
-                    let wordText = new Map<number, string>();
-                    let elementText = new Map<number, string>();
-
-                    for (const [key, count] of word_heatmap.entries()) {
-                        wordColors.set(key, `rgba(255, 0, 0, ${count / word_max})`);
-                        const reason = word_reasons.get(key) ?? new Map<string, number>();
-                        wordText.set(key, "Merknader på ord:\n" + Array.from(reason.entries()).map(([reason, count]) => `${norwegian_reason(reason)}: ${count}`).join("\n"));
-                    }
-                    for (const [key, count] of element_heatmap.entries()) {
-                        const reason = word_reasons.get(key) ?? new Map<string, number>();
-                        elementColors.set(key, `rgba(255, 0, 0, ${count / element_max * 0.5})`);
-                        elementText.set(key, "Merknader på element:\n" + Array.from(reason.entries()).map(([reason, count]) => `${norwegian_reason(reason)}: ${count}`).join("\n"));
-                    }
-
-                    setArticle({article: json["article"], wordColors, elementColors, wordText, elementText});
+                    setArticle({ article: json["article"], wordColors, elementColors, wordText, elementText });
                 });
+            } else {
+                window.history.pushState({}, "", "/articles?page=0");
+                setArticle(null);
             }
         });
-    }, [current_page]);
+    }, [current_page, filter]);
 
-    return <div className="app">
-        <div className="side-margin"/>
-        <div className="main-content">
-            {
-                article && <ArticleRenderer
-                    article={{html: article.article.html, title: article.article.title}}
-                    wordColor={article.wordColors}
-                    elementColor={article.elementColors}
-                    wordText={article.wordText}
-                    elementText={article.elementText}
-                />
-            }
-            <button className="fake-link" onClick={() => {
-                window.location.href = "/articles?page=" + (current_page - 1);
-            }}>Tilbake</button>
-            <button className="fake-link" onClick={() => {
-                window.location.href = "/articles?page=" + (current_page + 1);
-            }}>Neste</button>
+    return (
+        <div className="app">
+            <div className="filter">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={filter.understanding}
+                        onChange={(event) => setFilter({ ...filter, understanding: event.target.checked })}
+                    />
+                    Vanskelig
+                </label>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={filter.unnecessary}
+                        onChange={(event) => setFilter({ ...filter, unnecessary: event.target.checked })}
+                    />
+                    Unødvendig
+                </label>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={filter.good}
+                        onChange={(event) => setFilter({ ...filter, good: event.target.checked })}
+                    />
+                    Bra
+                </label>
+            </div>
+            <div className="side-margin" />
+            <div className="main-content">
+                <button
+                    className="fake-link"
+                    onClick={() => {
+                        if (current_page === 0) return;
+                        window.history.pushState({}, "", "/articles?page=" + (current_page - 1));
+                        setArticle(null);
+                    }}
+                >
+                    Tilbake
+                </button>
+                <button
+                    className="fake-link"
+                    onClick={() => {
+                        if (current_page === 20) return;
+                        window.history.pushState({}, "", "/articles?page=" + (current_page + 1));
+                        setArticle(null);
+                    }}
+                >
+                    Neste
+                </button>
+                <button
+                    className="fake-link"
+                    style={{float: "right"}}
+                    onClick={() => {
+                        window.location.href = "/stats";
+                    }}
+                >
+                    Statistikk
+                </button>
+                {article && (
+                    <ArticleRenderer
+                        article={{ html: article.article.html, title: article.article.title }}
+                        wordColor={article.wordColors}
+                        elementColor={article.elementColors}
+                        wordText={article.wordText}
+                        elementText={article.elementText}
+                    />
+                )}
+            </div>
+            <div className="side-margin" />
         </div>
-        <div className="side-margin"/>
-    </div>
-}
+    );
+};

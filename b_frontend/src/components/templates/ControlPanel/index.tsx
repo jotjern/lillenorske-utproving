@@ -34,8 +34,6 @@ export default () => {
         return () => clearInterval(interval);
     }, []);
 
-    console.log(stats);
-
     return <div className="control-panel">
         <div className="side-margin"/>
         <div className="main-content">

@@ -136,7 +136,6 @@ function App() {
         if (state.page === "unauthorized") {
             return <h1>Vennligst bruk linken du har fått</h1>
         } else if (state.page === "suggest") {
-            console.log(state);
             return <SuggestionPage pagesToRank={state.pagesToRank as unknown as PageToRank[]} onFinished={(suggestions, rankings) => {
                 fetch(API_URL + "/suggest", {
                     method: "POST",

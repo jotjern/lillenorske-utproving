@@ -32,6 +32,7 @@ export default (props: ArticlePageProps) => {
             <div className="main-content">
                 <h2 style={{backgroundColor: "lightblue", padding: "20px", margin: "0"}}>Trykk på ord og avsnitt du synes er vanskelige, unødvendige og ekstra bra.</h2>
                 <h1>{capitalized_title}</h1>
+
                 <ArticleRenderer
                     article={props.article}
                     onElementClicked={element => setClickedElement(element)}
