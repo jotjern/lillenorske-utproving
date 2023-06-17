@@ -5,6 +5,9 @@ import BarChart from "../../organisms/BarChart";
 import FakeLink from "../../atoms/FakeLink";
 
 import "./index.css";
+import HighchartsReact from "highcharts-react-official";
+import Highcharts from "highcharts";
+import PieChart from "../../organisms/PieChart";
 
 function reasonText(reason: "understanding" | "unnecessary" | "good") {
     switch (reason) {
@@ -113,6 +116,7 @@ export default function StatsPage() {
         label: word.text,
         value: parseInt(word.count)
     })).slice(0, 10);
+
 
     return <div>
         <FakeLink onClick={() => {

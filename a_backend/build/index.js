@@ -414,7 +414,48 @@ async function getArticleNotes(article) {
         text: row.text
     }));
 }
-async function getNthArticle(n) {
+async function getArticleFeedback(articleId) {
+    const stats = await pool.query(`
+        SELECT
+        	'preknowledge' AS metric, preknowledge AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY preknowledge UNION
+
+        SELECT
+        	'rating' AS metric, surveyRating AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveyRating UNION
+
+        SELECT
+        	'difficulty' AS metric, surveyDifficulty AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveyDifficulty UNION
+
+        SELECT
+        	'suitableAge' AS metric, surveySuitableAge AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveySuitableAge UNION
+
+        SELECT
+        	'learnedSomething' AS metric, surveyLearnedSomething AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveyLearnedSomething
+
+        ORDER BY metric, count DESC, value`, [typeof articleId === "string" ? parseInt(articleId) : articleId]);
+    let data = {};
+    stats.rows.forEach((item) => {
+        if (!data[item.metric])
+            data[item.metric] = {};
+        data[item.metric][item.value] = parseInt(item.count);
+    });
+    return data;
+}
+async function getArticleByNumber(n) {
     const result = await pool.query(`
         SELECT articleId, html, regexp_replace(articles.title, ' \\(NN\\)', '') AS title FROM articles ORDER BY title LIMIT 1 OFFSET $1`, [n]);
     return {
@@ -491,18 +532,12 @@ app.post("/api/admin/emergencyreset", async (req, res) => {
     res.status(200).send("OK");
 });
 app.get("/api/admin/articles/:articleNumber/notes", async (req, res) => {
-    let article;
-    try {
-        article = await getNthArticle(parseInt(req.params.articleNumber));
-    }
-    catch (e) {
-        res.status(400).send("Invalid article number");
-        return;
-    }
-    const notes = await getArticleNotes(article.articleId);
-    res.status(200).json({
-        article, notes
-    });
+    const article = await getArticleByNumber(parseInt(req.params.articleNumber));
+    const [notes, feedback] = await Promise.all([
+        getArticleNotes(article.articleId),
+        getArticleFeedback(article.articleId)
+    ]);
+    res.json({ article, notes, feedback });
 });
 app.get("/api/endstats", async (req, res) => {
     const stats = await getEndStats();

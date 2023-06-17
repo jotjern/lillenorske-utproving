@@ -1,8 +1,34 @@
 import ArticleRenderer from "../../organisms/ArticleRenderer";
 import React, { useEffect } from "react";
 import "./index.css";
+import PieChart from "../../organisms/PieChart";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+const translations = {
+    difficulty: "Hvor vanskelig",
+    hard: "Veldig vanskelig",
+    medium: "Passe vanskelig",
+    easy: "Lett",
+
+    learnedSomething: "Lærte noe",
+    yes: "Ja",
+    no: "Nei",
+
+    preknowledge: "Hva kunne du fra før",
+    none: "Ingenting",
+    some: "Litt",
+    "a lot": "Mye",
+
+    rating: "Vurdering av tekst",
+    good: "🤩",
+    ok: "😐",
+    bad: "😡",
+
+    suitableAge: "Passende alder",
+    small_children: "Småbarn",
+    adult: "Voksne"
+} as {[p: string]: string};
 
 function norwegian_reason(reason: string) {
     switch (reason) {
@@ -14,6 +40,33 @@ function norwegian_reason(reason: string) {
             return "Bra";
         default:
             return reason;
+    }
+}
+
+function translateData(data: {[p: string]: number}, translations: {[p: string]: string}): {[p: string]: number} {
+    const translatedData: {[key: string]: number} = {};
+
+    for (const key in data) {
+        if (translations[key]) {
+            const translatedKey = translations[key];
+            translatedData[translatedKey] = data[key];
+        } else {
+            translatedData[key] = data[key];
+        }
+    }
+
+    return translatedData;
+}
+
+interface ArticleNotesPageResponse {
+    article: {
+        articleId: number,
+        html: string,
+        title: string
+    },
+    notes: Note[],
+    feedback: {
+        [metric: string]: {[value: string]: number}
     }
 }
 
@@ -88,6 +141,7 @@ export default () => {
         elementColors: Map<number, string>;
         wordText: Map<number, string>;
         elementText: Map<number, string>;
+        feedback: {[p: string]: {[p: string]: number}}
     } | null>(null);
     const [filter, setFilter] = React.useState<{ understanding: boolean; unnecessary: boolean; good: boolean }>({
         understanding: true,
@@ -101,13 +155,12 @@ export default () => {
             method: "GET",
         }).then((response) => {
             if (response.status === 200) {
-                response.json().then((json) => {
+                response.json().then((data: ArticleNotesPageResponse) => {
                     let word_reasons = new Map<string, number>();
                     let element_reasons = new Map<string, number>();
 
-                    const notes = json["notes"] as Note[];
-                    const word_notes = notes.filter((note) => note.type === "word");
-                    const element_notes = notes.filter((note) => note.type === "element");
+                    const word_notes = data.notes.filter((note) => note.type === "word");
+                    const element_notes = data.notes.filter((note) => note.type === "element");
 
                     const {
                         indexColors: wordColors, reasonCountStrings: wordText
@@ -117,7 +170,7 @@ export default () => {
                         indexColors: elementColors, reasonCountStrings: elementText
                     } = processNotes(element_notes, filter, 0.5);
 
-                    setArticle({ article: json["article"], wordColors, elementColors, wordText, elementText });
+                    setArticle({ article: data["article"], wordColors, elementColors, wordText, elementText, feedback: data.feedback });
                 });
             } else {
                 window.history.pushState({}, "", "/articles?page=0");
@@ -128,6 +181,15 @@ export default () => {
 
     return (
         <div className="app">
+            {
+                article && <div style={{position: "absolute", right: 0, top: "18px", width: "18vw"}}>
+                {
+                    Object.entries(article.feedback).map(([metric, data]) =>
+                        <PieChart data={translateData(data, translations)} title={translations[metric] || metric}/>
+                    )
+                }
+            </div>
+            }
             <div className="filter">
                 <label>
                     <input

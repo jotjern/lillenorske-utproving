@@ -374,7 +374,7 @@ async function createSession(loginKey: string) {
     return sessionId;
 }
 
-async function getArticleNotes(article: string) {
+async function getArticleNotes(article: string | number) {
     const result = await pool.query(`
         SELECT index, text, reason, type FROM reviewNotes
         INNER JOIN reviews ON reviews.reviewId = reviewNotes.reviewId
@@ -388,9 +388,55 @@ async function getArticleNotes(article: string) {
     }));
 }
 
-async function getNthArticle(n: number) {
+async function getArticleFeedback(articleId: number | string) {
+    const stats = await pool.query(`
+        SELECT
+        	'preknowledge' AS metric, preknowledge AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY preknowledge UNION
+
+        SELECT
+        	'rating' AS metric, surveyRating AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveyRating UNION
+
+        SELECT
+        	'difficulty' AS metric, surveyDifficulty AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveyDifficulty UNION
+
+        SELECT
+        	'suitableAge' AS metric, surveySuitableAge AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveySuitableAge UNION
+
+        SELECT
+        	'learnedSomething' AS metric, surveyLearnedSomething AS value, count(*) AS count
+        FROM reviews
+        WHERE NOT skipped AND articleId = $1
+        GROUP BY surveyLearnedSomething
+
+        ORDER BY metric, count DESC, value`
+        , [typeof articleId === "string" ? parseInt(articleId) : articleId]);
+
+    let data: { [key: string]: { [key: string]: number } } = {};
+    stats.rows.forEach((item: {metric: string, value: string, count: string}) => {
+        if (!data[item.metric])
+            data[item.metric] = {};
+        data[item.metric][item.value] = parseInt(item.count);
+    });
+
+    return data;
+}
+
+async function getArticleByNumber(n: number) {
     const result = await pool.query(`
         SELECT articleId, html, regexp_replace(articles.title, ' \\(NN\\)', '') AS title FROM articles ORDER BY title LIMIT 1 OFFSET $1`, [n]);
+
     return {
         articleId: result.rows[0].articleid,
         html: result.rows[0].html,
@@ -470,17 +516,12 @@ app.post("/api/admin/emergencyreset", async (req, res) => {
 });
 
 app.get("/api/admin/articles/:articleNumber/notes", async (req, res) => {
-    let article;
-    try {
-        article = await getNthArticle(parseInt(req.params.articleNumber));
-    } catch (e) {
-        res.status(400).send("Invalid article number");
-        return;
-    }
-    const notes = await getArticleNotes(article.articleId);
-    res.status(200).json({
-        article, notes
-    });
+    const article = await getArticleByNumber(parseInt(req.params.articleNumber));
+    const [notes, feedback] = await Promise.all([
+        getArticleNotes(article.articleId),
+        getArticleFeedback(article.articleId)
+    ]);
+    res.json({article, notes, feedback});
 });
 
 app.get("/api/endstats", async (req, res) => {

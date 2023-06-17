@@ -8,8 +8,9 @@ import SuggestionPage, {PageToRank} from "../../templates/SuggestAndRankPage";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ThanksPage from "../../templates/ThanksPage";
 import LoadingPage from "../../templates/LoadingPage";
-import ArticlesDebugPage from "../../templates/ArticlesDebugPage";
+import ArticlesDebugPage from "../../templates/ArticlesStatsPage";
 import StatsPage from '../../templates/StatsPage';
+import PieChart from "../../organisms/PieChart";
 
 interface ImportMetaEnv {
     VITE_API_URL: string;
