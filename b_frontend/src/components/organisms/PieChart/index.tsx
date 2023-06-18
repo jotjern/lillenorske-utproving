@@ -8,6 +8,9 @@ interface PieChartProps {
 }
 
 const PieChart: React.FC<PieChartProps> = ({ data, title}) => {
+    // Generate colors from HSV color space evenly distributed with max saturation and value
+    const colors = Array.from(Array(Object.keys(data).length).keys()).map((i) =>
+        `hsl(${(i * 360) / Object.keys(data).length}, 70%, 50%)`);
     let highchartsOptions = {
         chart: {
             type: "pie",
@@ -38,7 +41,11 @@ const PieChart: React.FC<PieChartProps> = ({ data, title}) => {
         series: [
             {
                 name: "Antall",
-                data: Object.entries(data).map(([category, value]) => [category, value])
+                data: Object.entries(data)
+                    // compare by key
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([category, value]) => [category, value]),
+                colors: colors,
             }
         ],
         subtitle: {
